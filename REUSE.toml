@@ -1,0 +1,20 @@
+# Copyright and licence information for every file in this repository.
+# It is kept here, in one place, so that no source file needs a header.
+# Format: REUSE Specification 3.3 (https://reuse.software/spec-3.3/).
+# The licence texts are in LICENSES/. Check this file with:  uvx reuse lint
+
+version = 1
+
+# Everything in the project, unless a later table says otherwise.
+[[annotations]]
+path = "**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Aishwary Dhare"
+SPDX-License-Identifier = "PolyForm-Noncommercial-1.0.0"
+
+# The bundled three.js: unmodified third-party code that stays under its own licence.
+[[annotations]]
+path = "vendor/three/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2010-2024 three.js authors"
+SPDX-License-Identifier = "MIT"

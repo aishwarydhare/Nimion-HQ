@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D lab demo · Nimion HQ</title>
+<style>
+  /* tokens copied from index.html; .light / .dark (or data-theme, like index.html) force a theme for checking */
+  :root {
+    --bg: #fff8e1; --card: #ffffff; --ink: #2b2a33; --muted: #6f6c7a; --line: #f0e4bb;
+    --yellow: #ffd84d; --yellow-d: #d9a900; --denim: #2f5ea8; --denim-d: #244a86;
+    --good: #2e9e5b; --warn: #e08a00; --bad: #d64545; --floor: #f3e2a4; --sky: #fdf0c2;
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light):not([data-theme=light]) { --bg: #1c1b23; --card: #25242e; --ink: #f4f1e8; --muted: #a9a6b5; --line: #353341; --floor: #3a3527; --sky: #24222c; }
+  }
+  :root.dark, :root[data-theme=dark] { --bg: #1c1b23; --card: #25242e; --ink: #f4f1e8; --muted: #a9a6b5; --line: #353341; --floor: #3a3527; --sky: #24222c; color-scheme: dark; }
+  :root.light, :root[data-theme=light] { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); }
+  button, select { font: inherit; color: inherit; }
+  main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; font-size: 13px; }
+  .bar h1 { font-size: 18px; margin: 0 8px 0 0; }
+  .bar button, .bar select { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; cursor: pointer; }
+  #cap { flex-basis: 100%; color: var(--muted); min-height: 1.4em; }
+  #cap b { color: var(--ink); }
+  #log { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  #err { color: var(--bad); font: 12px ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+  #which { color: var(--muted); }
+  .spacer { height: 60vh; color: var(--muted); font-size: 12px; padding-top: 12px; }
+</style>
+</head>
+<body>
+<main id="main">
+  <div class="bar">
+    <h1>🍌 3D lab demo</h1>
+    <button id="play" type="button">Pause</button>
+    <button id="next" type="button">Next step ›</button>
+    <label>Theme <select id="theme"><option value="">auto</option><option>light</option><option>dark</option></select></label>
+    <span id="which"></span>
+    <label>Width <select id="width"><option value="">full</option><option>360</option><option>768</option><option>1200</option></select></label>
+    <div id="cap"></div>
+  </div>
+  <section id="lab" aria-label="The crew"></section>
+  <div id="log">Click a nimion or a roster button. Drag to rotate, ⌘/Ctrl + scroll or pinch to zoom, double-click or ⟲ Fit to reset.</div>
+  <div id="err"></div>
+  <div class="spacer">(Space so you can check that a plain mouse wheel over the lab scrolls the page.)</div>
+</main>
+<script>
+  window.addEventListener('error', e => { document.getElementById('err').textContent += (e.message || e) + '\n'; });
+</script>
+<script src="classic.js"></script><!-- an optional look pack: empty unless the server offers one -->
+<script src="world.js"></script><!-- HQW.boardGroups for the wall screen -->
+<script type="importmap">{ "imports": { "three": "/vendor/three/three.module.min.js", "three/addons/": "/vendor/three/addons/" } }</script>
+<script type="module" src="lab3d.js"></script>
+<script type="module">
+const $ = s => document.querySelector(s);
+const crew4 = [
+  { name: 'Tork', title: 'Boss · plans and hands out work', boss: true, look: { eyes: 1, prop: 'hat' } },
+  { name: 'Pip', title: 'Engineer · writes code', look: { eyes: 2, prop: 'wrench' } },
+  { name: 'Nim', title: 'Researcher · finds things out', look: { eyes: 1, prop: 'lens' } },
+  { name: 'Dot', title: 'Reviewer · tests and checks', look: { eyes: 2, prop: 'clipboard' } },
+];
+const extra = [
+  { name: 'Zed', title: 'Frontend · pixels', look: { eyes: 2, prop: 'laptop' } },
+  { name: 'Bo', title: 'Designer · makes it pretty', look: { eyes: 1, prop: 'paintbrush', tone: '#ffc94a' } },
+  { name: 'Kit', title: 'Support · answers the phones', look: { eyes: 2, prop: 'headset' } },
+  { name: 'Lux', title: 'Chemist · data pipelines', look: { eyes: 2, prop: 'flask', tone: '#f6e27a' } },
+  { name: 'Moe', title: 'Intern · unknown prop falls back to none', look: { eyes: 1, prop: 'jetpack', tone: '#ffe08a' } },
+];
+const extra2 = [ // 3D demo only: grows the crew to 12 (a third row of desks)
+  { name: 'Ada', title: 'Architect · draws the boxes', look: { eyes: 2, prop: 'hat', tone: '#ffd24d' } },
+  { name: 'Rex', title: 'Ops · keeps servers up', look: { eyes: 1, prop: 'wrench' } },
+  { name: 'Fizz', title: 'QA · breaks things', look: { eyes: 2, prop: 'flask', tone: '#fff07a' } },
+];
+// give every demo nimion a colour and a style, so the room shows the whole range
+{ const TN = ['#7fe0b0', '#ffaa33', '#ff7aa8', '#ffd84d', '#7cc8ff', '#c9a7ff', '#ff8040', '#b8e85c', '#fff07a', '#ff7a6b', '#e8c99a', '#e6e9f0'], ST = ['bobble', 'sprout', 'tuft'];
+  [...crew4, ...extra, ...extra2].forEach((c, i) => { c.look.tone = TN[i % TN.length]; c.look.style = ST[i % ST.length]; }); }
+let S, id = 0;
+const reset = () => { S = { crew: crew4.slice(), tasks: [], approvals: [], breaker: null }; };
+const T = (nimion, status, title, extra) => { const t = Object.assign({ id: ++id, nimion, status, title }, extra); S.tasks.push(t); return t.id; };
+const set = (i, patch) => Object.assign(S.tasks.find(t => t.id === i) || {}, patch);
+const tool = t => ({ k: 'tool', t, at: Date.now() }), say = t => ({ k: 'say', t, at: Date.now() });
+const R = {}; // task ids by role
+const later = f => setTimeout(f, 300); // Lab.* calls that need the crew from the next push
+// a crew of 8 wearing the 12 new props (two line-ups), same names so the desks stay put
+const look8 = (props, eyes) => ['Tork', 'Pip', 'Nim', 'Dot', 'Zed', 'Bo', 'Kit', 'Lux'].map((name, i) =>
+  ({ name, title: i ? 'Crew · ' + props[i] : 'Boss · ' + props[i], boss: !i, look: { eyes: eyes[i], prop: props[i], tone: ['#ffd84d', '#ffe14d', '#ffc94a', '#f6e27a', '#ffd84d', '#ffe08a', '#ffd24d', '#fff07a'][i] } }));
+const props1 = look8(['tophat', 'cap', 'beanie', 'crown', 'glasses', 'sunglasses', 'headphones', 'mug'], [1, 2, 1, 2, 2, 1, 2, 1]);
+const props2 = look8(['bowtie', 'hammer', 'book', 'pencil', 'glasses', 'sunglasses', 'cap', 'beanie'], [2, 1, 2, 1, 1, 2, 1, 2]);
+{ const TN = ['#7cc8ff', '#ff7aa8', '#b8e85c', '#ffaa33', '#c9a7ff', '#7fe0b0', '#ffd84d', '#ff8040'], ST = ['sprout', 'tuft', 'bobble'];
+  [props1, props2].forEach((list, k) => list.forEach((c, i) => { c.look.tone = TN[(i + k * 3) % TN.length]; c.look.style = ST[(i + k) % ST.length]; })); } // the prop crews too
+const seven = ['Pip', 'Nim', 'Dot', 'Zed', 'Bo', 'Kit', 'Lux'];
+
+// [seconds to hold, caption, change]
+const STEPS = [
+  [7, 'Crew of 4, all <b>idle</b>: they wander and play in the corner.', () => reset()],
+  [5, 'The boss starts <b>working</b>: he draws at the whiteboard.', () => { R.plan = T('Tork', 'working', 'Plan: add a /health endpoint', { last: tool('Read package.json') }); }],
+  [6, 'The boss hands out 3 tasks: <b>envelopes fly</b> to Pip, Nim and Dot, who head to their desks and <b>wait</b>.', () => {
+    R.pip = T('Pip', 'queued', 'Add the /health route', { parent: R.plan });
+    R.nim = T('Nim', 'queued', 'Find how routes are registered', { parent: R.plan });
+    R.dot = T('Dot', 'queued', 'Review the change', { parent: R.plan });
+    set(R.plan, { last: say('Plan ready. Three small steps.\nDetails follow') });
+  }],
+  [7, 'Plan done (no scene for the boss). Pip and Nim are <b>working</b>: monitors light up, bubbles show the live action. Dot <b>waits</b>.', () => {
+    set(R.plan, { status: 'done' });
+    set(R.pip, { status: 'working', last: tool('Edit server.js') });
+    set(R.nim, { status: 'working', last: say('Looking at how routes are registered…\nsecond line hidden') });
+  }],
+  [6, 'Nim <b>needs you</b>: hand up, orange "!" bubble asking for WebFetch.', () => {
+    set(R.pip, { last: tool('Bash(npm test)') });
+    S.approvals.push({ id: 1, nimion: 'Nim', tool: 'WebFetch' });
+  }],
+  [9, 'Pip is <b>done</b>: a <b>cheer jump</b> with confetti, then takes a paper to the boss and gets a 👍.', () => {
+    set(R.pip, { status: 'done', ms: 75000 });
+    set(R.dot, { status: 'working', last: null });
+  }],
+  [9, 'Nim is <b>done</b>: cheers and reports too. Dot <b>has a question</b> (stands up and waves).', () => {
+    S.approvals = [];
+    set(R.nim, { status: 'done', ms: 20000 });
+    set(R.dot, { status: 'needs-you' });
+  }],
+  [7, 'Usage limit reached: Pip has queued work and is <b>paused</b> (sleeps, greyed, zzz).', () => {
+    set(R.dot, { status: 'working', last: tool('Grep "app.get"') });
+    R.pip2 = T('Pip', 'queued', 'Add a test for /health');
+    S.breaker = '5-hour window at 95%';
+  }],
+  [9, 'Dot <b>fails</b>: red paper to the boss, who answers 🤔.', () => { set(R.dot, { status: 'failed' }); }],
+  [5, 'The limit resets: Pip wakes up and works.', () => { S.breaker = null; set(R.pip2, { status: 'working', last: tool('Write test/health.test.js') }); }],
+  [8, 'Pip is <b>stopped</b>: red paper too.', () => { set(R.pip2, { status: 'stopped' }); }],
+  [8, 'The crew grows to <b>9</b> at runtime: newcomers walk in, desks re-arrange. (A task for an unknown nimion is ignored.)', () => {
+    S.crew = crew4.concat(extra);
+    T('Ghost', 'working', 'Task for a nimion who is not in the crew');
+  }],
+  [4, 'The boss plans for the big crew.', () => { R.plan2 = T('Tork', 'working', 'Plan: redesign the settings page', { last: tool('Glob src/**/*.tsx') }); }],
+  [6, 'Six tasks at once: <b>six envelopes</b>.', () => {
+    R.big = ['Pip', 'Nim', 'Zed', 'Bo', 'Kit', 'Lux'].map(n => T(n, 'queued', 'Settings: part for ' + n, { parent: R.plan2 }));
+  }],
+  [9, 'Everyone busy: mixed live actions, Kit has a question, Moe has a queue.', () => {
+    set(R.plan2, { status: 'done' });
+    const lasts = [tool('Edit settings.tsx'), say('Comparing two layouts'), tool('Bash(npm run build)'), null, null, tool('Read schema.sql')];
+    R.big.forEach((i, k) => set(i, { status: k === 4 ? 'needs-you' : 'working', last: lasts[k] }));
+    T('Moe', 'queued', 'Tidy the README'); T('Moe', 'queued', 'Fix typos');
+  }],
+  [12, 'Four finish together: three cheer, Bo facepalms; a little <b>queue at the boss</b>.', () => {
+    set(R.big[0], { status: 'done', ms: 90000 }); set(R.big[2], { status: 'done', ms: 30000 });
+    set(R.big[3], { status: 'failed' }); set(R.big[5], { status: 'done', ms: 61000 });
+  }],
+  [8, 'The crew grows to <b>12</b>: a third row of desks appears and the camera refits.', () => { S.crew = crew4.concat(extra, extra2); }],
+  [10, 'Twelve at once: crowded bubbles shrink to icons; the most urgent stay.', () => {
+    R.twelve = ['Pip', 'Nim', 'Dot', 'Zed', 'Bo', 'Kit', 'Lux', 'Moe', 'Ada', 'Rex', 'Fizz'].map((n, k) =>
+      T(n, k === 6 ? 'needs-you' : k === 9 ? 'queued' : 'working', 'Big push: part ' + (k + 1), { last: k % 3 ? tool(TOOLS[k % TOOLS.length]) : say('**Checking** the result') }));
+  }],
+  [7, 'Two members leave; the task list empties.', () => { S.crew = crew4.concat(extra.slice(0, 3)); S.tasks = []; S.approvals = []; }],
+  // ---- new: props, desk piles, play, hand-offs, reactions, sky, deliverables ----
+  [8, 'New props (1/2) on a crew of 8: top hat, cap, beanie, crown, glasses, sunglasses, headphones, mug. Everyone has a <b>queue</b>: the <b>paper pile</b> on each desk grows with it.', () => {
+    S.crew = props1; S.tasks = []; S.approvals = [];
+    seven.forEach((n, k) => { for (let j = 0; j <= k + (k > 4 ? 4 : 0); j++) T(n, 'queued', `Queued job ${j + 1} for ${n}`); });
+  }],
+  [7, 'New props (2/2): bow tie, hammer, book, pencil (+ one-eyed glasses and sunglasses, cap, beanie).', () => { S.crew = props2; }],
+  [6, 'The queues clear: the piles <b>shrink</b> sheet by sheet.', () => { S.tasks = []; }],
+  [10, 'Idle nimions <b>play</b>: catch (blue ball, right of the boss) and a kick-about with the corner ball.', () => later(() => { Lab.game('catch'); Lab.game('kick'); })],
+  [6, 'Work interrupts play: everyone gets a job and goes to the desk at once.', () => {
+    R.all = seven.map(n => T(n, 'working', 'Sprint task for ' + n, { last: tool('Read README.md') }));
+  }],
+  [11, 'Seven jobs done: every nimion <b>celebrates</b> (jump, arms up, confetti), then reports to the boss.', () => { R.all.forEach(i => set(i, { status: 'done', ms: 30000 })); }],
+  [11, 'More play: <b>tag</b> on the left and a <b>board game</b> at the round table (they sit and take turns).', () => later(() => { Lab.game('tag'); Lab.game('board'); })],
+  [6, 'A boss job with two steps: envelopes fly (the boss is busy planning). Pip works on step 1; Nim\'s step 2 waits for it. Zed works on his own job.', () => {
+    R.plan3 = T('Tork', 'working', 'Plan: a release note', { last: tool('Read CHANGELOG.md') });
+    R.s1 = T('Pip', 'working', 'Step 1: collect the changes', { parent: R.plan3, last: tool('Bash(git log)') });
+    R.s2 = T('Nim', 'queued', 'Step 2: write the note', { parent: R.plan3, after: [R.s1] });
+    R.z = T('Zed', 'working', 'Fix the flaky test', { last: tool('Bash(npm test)') });
+  }],
+  [10, '<b>Hand-off</b>: Pip finishes step 1, celebrates, and walks the papers to Nim\'s desk; Nim starts at once.', () => {
+    set(R.plan3, { status: 'done' }); set(R.s1, { status: 'done', ms: 40000 }); set(R.s2, { status: 'working', last: tool('Write NOTES.md') });
+  }],
+  [10, 'The boss is free: he <b>walks</b> a new step to Dot\'s desk and drops it on the pile.', () => {
+    R.s3 = T('Dot', 'queued', 'Step 3: review the note', { parent: R.plan3, after: [R.s2] });
+  }],
+  [8, 'Zed <b>fails</b>: a facepalm, then the red paper to the boss.', () => { set(R.z, { status: 'failed' }); }],
+  [7, 'Kit <b>needs you</b>: stands up beside the desk, waves, a bobbing orange "!".', () => { R.kit = T('Kit', 'needs-you', 'Which date format?'); }],
+  [7, 'The human plays the arcade and <b>wins</b>: idle nimions gather and cheer (Lab.react("win")).', () => {
+    set(R.kit, { status: 'done' }); later(() => { Lab.arcade(true); setTimeout(() => Lab.react('win'), 2500); });
+  }],
+  [6, '…and <b>loses</b> the next round: they groan and shrug (Lab.react("lose")).', () => later(() => Lab.react('lose'))],
+  [7, 'Lab.sky("night"): moon and stars in the windows, the lamps glow.', () => later(() => { Lab.arcade(false); Lab.sky('night'); })],
+  [7, 'Lab.sky("day"): midday sun, lamps off. (Try the theme menu: dark mode keeps the time of day.)', () => later(() => Lab.sky('day'))],
+  [7, 'Lab.sky("auto") follows the clock again. The <b>Deliverables</b> cabinet under the bookshelf counts 7 files (Lab.deliverables(7)).', () => later(() => { Lab.sky('auto'); Lab.deliverables(7); })],
+  [4, 'Back to a crew of 4. The demo loops.', () => { reset(); later(() => { Lab.arcade(false); Lab.sky('auto'); Lab.deliverables(0); }); }],
+];
+
+// Live-action ticker: while a task works, its last action changes every few seconds.
+const TOOLS = ['Read src/app.ts', 'Edit src/app.ts', 'Bash(npm test)', 'Grep "TODO"', 'Write notes.md'];
+let tickN = 0;
+function ticker() {
+  tickN++;
+  for (const t of S.tasks) if (t.status === 'working' && t.nimion !== 'Ghost' && (tickN + t.id) % 3 === 0)
+    t.last = (tickN + t.id) % 2 ? tool(TOOLS[(tickN + t.id) % TOOLS.length]) : say('Step ' + tickN + ': checking the result');
+}
+
+const q = new URLSearchParams(location.search);
+let step = 0, playing = !q.has('hold'), until = 0;
+function apply(i) { STEPS[i][2](); $('#cap').innerHTML = `Step ${i + 1}/${STEPS.length}: ${STEPS[i][1]}`; }
+function nextStep() { step = (step + 1) % STEPS.length; if (step === 0) step = 1; apply(step); until = Date.now() + STEPS[step][0] * 1000; }
+
+Lab.mount($('#lab'), { onNimionClick: name => { $('#log').textContent = `onNimionClick("${name}") at ${new Date().toLocaleTimeString()}`; } });
+// ?step=N starts at step N with no transition scenes (they are all "already present at the first update").
+reset();
+const start = Math.min(STEPS.length - 1, Math.max(0, Number(q.get('step')) || 0));
+for (let i = 0; i <= start; i++) apply(i);
+step = start;
+until = Date.now() + STEPS[step][0] * 1000;
+Lab.update(S);
+if (q.get('theme')) document.documentElement.className = q.get('theme');
+if (q.get('w')) $('#main').style.maxWidth = q.get('w') + 'px';
+if (q.has('then')) setTimeout(nextStep, 400); // with ?hold: play one transition, then stay
+if (!playing) $('#play').textContent = 'Play';
+
+setInterval(() => {                   // several pushes a second, like the server
+  if (playing && Date.now() > until) nextStep();
+  Lab.update(S);
+}, 250);
+setInterval(() => { if (playing) ticker(); }, 1000);
+
+$('#play').onclick = () => { playing = !playing; $('#play').textContent = playing ? 'Pause' : 'Play'; until = Date.now() + 2000; };
+$('#next').onclick = () => nextStep();
+$('#theme').onchange = e => { document.documentElement.className = e.target.value; document.documentElement.dataset.theme = e.target.value; };
+$('#width').onchange = e => { $('#main').style.maxWidth = e.target.value ? e.target.value + 'px' : ''; };
+console.log('Lab.props', Lab.props);
+$('#which').textContent = document.querySelector('#lab .l3') ? '(three.js)' : '(SVG fallback: no WebGL)';
+window.demo = { get S() { return S; }, STEPS, apply: i => { apply(i); Lab.update(S); } }; // for headless checks
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Keep GitHub's language bar about the project's own code.
+vendor/** linguist-vendored
+docs/** linguist-documentation
+research/** linguist-documentation
+plans/** linguist-documentation
+
+*.webp binary
+*.gif binary

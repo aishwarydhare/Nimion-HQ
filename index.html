@@ -1,0 +1,1702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimion HQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 9 v-6' stroke='%233f9d4f' stroke-width='2.4' stroke-linecap='round'/><ellipse cx='26' cy='3.5' rx='6.5' ry='3' fill='%235cc46a' transform='rotate(-24 26 3.5)'/><ellipse cx='38' cy='3.5' rx='6.5' ry='3' fill='%235cc46a' transform='rotate(24 38 3.5)'/><clipPath id='b'><rect x='10' y='8' width='44' height='56' rx='22'/></clipPath><g clip-path='url(%23b)'><rect x='10' y='8' width='44' height='56' fill='%23ffaa33'/><path d='M10 49 Q32 57 54 49 V58 Q32 66 10 58 Z' fill='%230f9db0'/></g><rect x='10' y='8' width='44' height='56' rx='22' fill='none' stroke='%23c77f1d' stroke-width='2'/><circle cx='32' cy='27' r='12.6' fill='%233b2a20'/><circle cx='32' cy='27' r='11.4' fill='%23fff'/><circle cx='32' cy='27.6' r='6.8' fill='%236b4322'/><circle cx='32' cy='27.6' r='3.6' fill='%23111'/><circle cx='35.2' cy='24.2' r='2.1' fill='%23fff'/><ellipse cx='16.5' cy='41' rx='4' ry='2.6' fill='%23ff8fa3' opacity='.7'/><ellipse cx='47.5' cy='41' rx='4' ry='2.6' fill='%23ff8fa3' opacity='.7'/><path d='M25 42.5 Q32 48.5 39 42.5' stroke='%235a2a1a' stroke-width='2.6' fill='none' stroke-linecap='round'/></svg>">
+<style>
+  :root {
+    --bg: #fff8e1; --card: #ffffff; --ink: #2b2a33; --muted: #6f6c7a; --line: #f0e4bb;
+    --yellow: #ffd84d; --yellow-d: #d9a900; --denim: #2f5ea8; --denim-d: #244a86;
+    --good: #2e9e5b; --warn: #e08a00; --bad: #d64545; --floor: #f3e2a4; --sky: #fdf0c2; --link: #2f5ea8;
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+    color-scheme: light dark;
+  }
+  /* dark: follows the system unless you pick one with the 🌙/☀️ button or D (saved in this browser as hq-theme) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) { --bg: #1c1b23; --card: #25242e; --ink: #f4f1e8; --muted: #a9a6b5; --line: #353341; --floor: #3a3527; --sky: #24222c; --link: #8fb8ff; }
+  }
+  :root[data-theme=dark] { --bg: #1c1b23; --card: #25242e; --ink: #f4f1e8; --muted: #a9a6b5; --line: #353341; --floor: #3a3527; --sky: #24222c; --link: #8fb8ff; color-scheme: dark; }
+  :root[data-theme=light] { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .muted { color: var(--muted); }
+
+  /* the 3D room fills the window; the header is a thin HUD over it, and every panel opens as a popup */
+  header { position: fixed; top: 10px; left: 10px; right: 10px; z-index: 6; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 6px 10px 6px 12px;
+    border: 1px solid var(--line); border-radius: 16px; background: color-mix(in srgb, var(--card) 82%, transparent); backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 32px; height: 32px; border-radius: 50%; background: var(--yellow); display: grid; place-items: center; font-size: 17px; box-shadow: inset 0 -3px 0 var(--yellow-d); }
+  .brand h1 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .meters { margin-left: auto; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .meter { width: 128px; font-size: 12px; }
+  .m-lbl { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .bar { position: relative; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: linear-gradient(90deg, #ffe680, var(--yellow)); }
+  .bar i.warn { background: linear-gradient(90deg, #ffc266, var(--warn)); }
+  .bar i.bad { background: linear-gradient(90deg, #f08a8a, var(--bad)); }
+  .bar s { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .45; }
+  .breaker { font-size: 12px; padding: 6px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); }
+  .breaker.on { background: var(--bad); color: #fff; border-color: var(--bad); font-weight: 700; }
+  #conn { font-size: 12px; color: var(--bad); }
+
+
+  @keyframes bob { 50% { transform: translateY(-4px); } } /* the typing dots in the task drawer */
+
+  /* order form */
+  .order { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+  .order textarea, #replyText { width: 100%; resize: vertical; font: inherit; font-size: 15px; color: var(--ink); background: var(--bg);
+    border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .order textarea:focus, #replyText:focus, select:focus { outline: none; border-color: var(--denim); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+  select { font: inherit; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+  .hint { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .go { border: 0; border-radius: 12px; padding: 10px 18px; font-weight: 800; background: var(--yellow); color: #2b2a33; box-shadow: inset 0 -3px 0 var(--yellow-d); }
+  .go:hover { filter: brightness(1.05); }
+  .go:disabled { opacity: .5; cursor: default; }
+
+  /* attachments */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chips:empty { display: none; }
+  .chip-att { display: inline-flex; align-items: center; gap: 5px; max-width: 280px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 99px; padding: 3px 4px 3px 10px; font-size: 12.5px; }
+  .chip-att span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip-att.up { opacity: .6; padding-right: 10px; }
+  .chip-att button { border: 0; background: none; color: var(--muted); font-size: 16px; line-height: 1; padding: 0 5px; }
+  .chip-att button:hover { color: var(--bad); }
+  .att-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .att-path { flex: 1; min-width: 0; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+  .att-path:focus { outline: none; border-color: var(--denim); }
+  form.drag { outline: 3px dashed var(--denim); outline-offset: 4px; }
+
+  /* board */
+  /* mission board: one group per job you gave the boss (its steps under it), plus direct jobs and scheduled runs */
+  .mb { display: grid; gap: 10px; }
+  .mb-g { border: 1px solid var(--line); border-left: 4px solid var(--st, var(--line)); border-radius: 14px; background: color-mix(in srgb, var(--bg) 55%, var(--card)); }
+  .mb-g.st-needs-you { --st: var(--warn); } .mb-g.st-working { --st: var(--good); } .mb-g.st-queued { --st: #7fa3d9; } .mb-g.st-failed, .mb-g.st-stopped { --st: var(--bad); }
+  .mb-h { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 6px; }
+  .mb-tog { border: 0; background: none; color: var(--muted); width: 28px; height: 28px; border-radius: 8px; font-size: 13px; flex: none; }
+  .mb-tog[aria-expanded=true] { transform: rotate(90deg); }
+  .mb-tog:hover, .mb-ttl:hover { background: var(--line); }
+  .mb-ttl { flex: 1; min-width: 0; border: 0; background: none; text-align: left; border-radius: 8px; padding: 3px 6px; display: grid; }
+  .mb-ttl b { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mb-ttl small { font-size: 12px; color: var(--muted); }
+  .mb-prog { width: 90px; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; flex: none; }
+  .mb-prog i { display: block; height: 100%; background: var(--st, var(--good)); }
+  .mb-n { font-size: 12px; color: var(--muted); white-space: nowrap; flex: none; }
+  .mb-h .chip { margin-left: 0; flex: none; --tint: var(--good); } /* a group's working chip has no nimion tint */
+  .mb-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; padding: 0 12px 12px 40px; }
+  .mb-items[hidden] { display: none; }
+  .mb .task .step { color: var(--muted); }
+  .tasks { display: grid; gap: 8px; }
+  .task { width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--tint); border-radius: 12px; padding: 10px 12px; }
+  .task:hover { border-color: var(--tint); }
+  .t-top { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .t-top b { color: var(--ink); }
+  .chip { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--line); color: var(--ink); }
+  .chip.done { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+  .chip.failed, .chip.stopped { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+  .chip.working { background: var(--tint); color: #fff; }
+  .chip.needs-you { background: var(--warn); color: #fff; }
+
+  /* needs you: tool approvals and questions */
+  .needs { border: 2px solid var(--warn); border-radius: 16px; padding: 12px 14px; background: color-mix(in srgb, var(--warn) 8%, var(--card)); }
+  .needs[hidden] { display: none; }
+  .needs h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--warn); }
+  .asks { display: grid; gap: 10px; }
+  .ask { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--tint); border-radius: 12px; padding: 10px 12px; }
+  .ask.q-card { cursor: pointer; }
+  .ask.q-card:hover { border-color: var(--tint); }
+  .ask-top { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .ask-top b { color: var(--ink); }
+  .ask-top a { color: inherit; }
+  .ask > code { display: block; font: 12.5px/1.45 ui-monospace, Menlo, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 160px; overflow: auto; }
+  .ask-btns { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .allow { background: var(--good); color: #fff; border: 0; border-radius: 10px; padding: 7px 16px; font-weight: 800; }
+  .deny { background: var(--bg); color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent); border-radius: 10px; padding: 7px 14px; font-weight: 700; }
+  .q { font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .q-card .q { max-height: 4.4em; overflow: hidden; }
+  /* markdown in chat bubbles and questions (md.js) */
+  .md { white-space: normal; }
+  .md > :first-child { margin-top: 0; }
+  .md > :last-child { margin-bottom: 0; }
+  .md p, .md ul, .md ol, .md pre, .md blockquote, .md .tbl { margin: 0 0 8px; }
+  .md h3, .md h4, .md h5, .md h6 { margin: 12px 0 6px; line-height: 1.3; }
+  .md h3 { font-size: 16px; } .md h4 { font-size: 15px; } .md h5, .md h6 { font-size: 14px; }
+  .md ul, .md ol { padding-left: 22px; }
+  .md li { margin: 2px 0; }
+  .md li > ul, .md li > ol { margin: 2px 0 0; }
+  .md pre { background: color-mix(in srgb, var(--ink) 6%, transparent); border-radius: 8px; padding: 8px 10px; overflow: auto; }
+  .md pre code { background: none; padding: 0; font: 12.5px/1.45 ui-monospace, Menlo, monospace; white-space: pre; }
+  .md blockquote { border-left: 3px solid var(--line); padding-left: 10px; color: var(--muted); }
+  .md .tbl { overflow-x: auto; }
+  .md table { border-collapse: collapse; font-size: 13px; }
+  .md th, .md td { border: 1px solid var(--line); padding: 5px 9px; text-align: left; vertical-align: top; }
+  .md th { background: color-mix(in srgb, var(--ink) 5%, transparent); font-weight: 700; }
+  /* files the crew made: a link, a hover menu (VS Code / browser / Finder), and a preview */
+  a.flink { color: var(--link); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+  a.flink code { color: inherit; }
+  #fmenu { position: fixed; z-index: 40; display: flex; gap: 4px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+  #fmenu[hidden] { display: none; }
+  #fmenu button { border: 0; background: var(--bg); color: var(--ink); border-radius: 7px; padding: 5px 9px; font-size: 12.5px; white-space: nowrap; }
+  #fmenu button:hover, #fmenu button:focus-visible { background: var(--yellow); color: #2b2a33; }
+  #fprev { width: min(980px, calc(100% - 32px)); height: min(86vh, 900px); padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); }
+  #fprev[open] { display: flex; flex-direction: column; }
+  #fprev::backdrop { background: rgb(0 0 0 / .45); }
+  #pal { width: min(620px, calc(100% - 32px)); margin-top: 12vh; padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+  #pal::backdrop { background: rgb(0 0 0 / .35); }
+  #palQ { width: 100%; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); font: inherit; font-size: 17px; padding: 14px 16px; outline: none; }
+  #palList { list-style: none; margin: 0; padding: 6px; max-height: min(52vh, 460px); overflow: auto; }
+  #palList li { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 9px; cursor: pointer; font-size: 14px; }
+  #palList li[aria-selected=true] { background: var(--yellow); color: #2b2a33; } #palList li[aria-selected=true] small { color: #4a4652; }
+  #palList li .pi { width: 22px; text-align: center; flex: none; } #palList li .pl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #palList li small { color: var(--muted); font-size: 12px; white-space: nowrap; } #palList li i.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tint); display: inline-block; }
+  #palList .pal-empty { color: var(--muted); cursor: default; }
+  .pal-foot { margin: 0; padding: 8px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  #keys { width: min(480px, calc(100% - 32px)); border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); padding: 18px 22px; }
+  #keys::backdrop { background: rgb(0 0 0 / .45); }
+  #keys h2 { margin: 0 0 10px; font-size: 18px; } #keys table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  #keys td { padding: 4px 0; } #keys td:first-child { width: 130px; }
+  kbd { display: inline-block; min-width: 22px; text-align: center; font: 700 12px ui-monospace, Menlo, monospace; padding: 2px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: var(--bg); color: var(--ink); }
+  #keys p { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+  .fp-head { display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .fp-head b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+  .fp-body { flex: 1; overflow: auto; padding: 16px 20px; }
+  .fp-body iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+  .fp-body.frame { padding: 0; } .fp-body pre { margin: 0; font: 12.5px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+  .md tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ink) 2.5%, transparent); }
+  .md hr { border: 0; border-top: 1px solid var(--line); margin: 10px 0; }
+  .md a { color: var(--link); }
+  .e-you.md a { color: inherit; }
+  .q code, .e code { font: 12.5px ui-monospace, Menlo, monospace; background: color-mix(in srgb, var(--ink) 7%, transparent); border-radius: 5px; padding: 0 4px; }
+  /* one-click answers the nimion suggests */
+  .opts { display: grid; gap: 6px; margin-top: 8px; }
+  .opt { display: flex; gap: 10px; align-items: baseline; text-align: left; font: inherit; font-size: 14px; line-height: 1.4; color: var(--ink); cursor: pointer;
+    background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .opt:hover, .opt:focus-visible { outline: none; border-color: var(--tint); background: color-mix(in srgb, var(--tint) 12%, var(--bg)); }
+  .opt:disabled { opacity: .55; cursor: default; }
+  .opt i { font-style: normal; font-size: 12px; font-weight: 800; color: var(--tint); min-width: 1ch; }
+  .opt small { font-size: 13px; color: var(--muted); }
+  #qbox { padding: 12px 18px 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--warn) 7%, var(--card)); max-height: 50vh; overflow: auto; }
+  #qbox[hidden] { display: none; }
+  .qb-who { font-size: 12px; font-weight: 800; color: var(--tint); margin-bottom: 4px; }
+  .q-own { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+  .ttl { margin-top: 4px; font-size: 14px; line-height: 1.35; }
+  .t-meta { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 0; }
+
+  /* drawer */
+  #drawer { position: fixed; z-index: 10; top: 64px; right: 0; bottom: 0; width: min(580px, 100%); display: flex; flex-direction: column; border-top: 1px solid var(--line); border-top-left-radius: 16px;
+    background: var(--card); border-left: 1px solid var(--line); box-shadow: -12px 0 40px rgba(0,0,0,.15); }
+  #drawer[hidden] { display: none; }
+  .d-head { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .d-head > div:first-child { flex: 1; min-width: 0; } /* a long job name in the switcher must not push ✕ off screen */
+  .d-head h2 { margin: 2px 0 4px; font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+  .d-id, .d-meta { font-size: 12px; color: var(--muted); }
+  .jobs { margin-top: 8px; width: 100%; max-width: 100%; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 5px 8px; }
+  .d-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 6px 12px; font-size: 13px; }
+  .btn.icon { display: inline-grid; place-items: center; padding: 6px 9px; color: var(--ink); }
+  #setupBtn.bad { background: var(--bad); color: #fff; border-color: var(--bad); font-weight: 700; }
+  #setup { max-width: 640px; width: calc(100% - 32px); border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); padding: 20px 22px; }
+  #setup::backdrop { background: rgb(0 0 0 / .45); }
+  #setup h2 { margin: 0 0 6px; } #setup h3 { margin: 18px 0 4px; font-size: 15px; }
+  #setup p { margin: 6px 0; font-size: 14px; }
+  .steps { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+  .steps li { display: grid; grid-template-columns: 28px 1fr; gap: 4px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+  .steps li > span { font-size: 18px; } .steps li small { grid-column: 2; color: var(--muted); }
+  .steps code, #setup code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; font-size: 12.5px; user-select: all; }
+  #suMcpList { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; max-height: 180px; overflow: auto; }
+  #suMcpList li { font-size: 12px; border: 1px solid var(--line); border-radius: 99px; padding: 3px 9px; background: var(--bg); }
+  #suMcpList li.off { color: var(--muted); }
+  .su-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .btn.stop { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+  .log { flex: 1; overflow: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .e { font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .e-you { align-self: flex-end; max-width: 85%; background: var(--yellow); color: #2b2a33; padding: 8px 12px; border-radius: 14px 14px 4px 14px; }
+  .e-say { background: var(--bg); border: 1px solid var(--line); padding: 10px 12px; border-radius: 4px 14px 14px 14px; }
+  .e-say .who { display: block; font-size: 11px; font-weight: 800; color: var(--tint); margin-bottom: 2px; white-space: normal; }
+  .e-tool { font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); padding-left: 4px; }
+  .e-sys { align-self: center; font-size: 12px; color: var(--muted); font-style: italic; text-align: center; }
+  .e-err { font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); padding: 8px 10px; border-radius: 10px; }
+  .typing { display: flex; gap: 4px; padding: 4px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bob .9s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  #reply { display: flex; flex-direction: column; gap: 4px; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
+  .r-row { display: flex; gap: 8px; align-items: flex-end; }
+  .r-row .attach { flex: 1; min-width: 0; }
+
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: var(--bg);
+    padding: 10px 16px; border-radius: 12px; font-size: 14px; }
+  #toast[hidden] { display: none; }
+
+  /* crew and linked context */
+  .admin { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .admin details { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; }
+  .admin summary { cursor: pointer; font-weight: 800; padding: 4px 0; }
+  .admin summary .n { background: var(--line); border-radius: 99px; padding: 1px 8px; font-size: 12px; }
+  .admin summary .muted { font-weight: 400; font-size: 13px; }
+  .crew-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; border-left: 4px solid var(--tint);
+    background: var(--bg); border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
+  .crew-btns { display: flex; gap: 6px; }
+  .crew-form { margin-top: 14px; display: grid; gap: 8px; }
+  .crew-form[hidden], #mrList[hidden] { display: none; }
+  .crew-form h4 { margin: 4px 0; }
+  .crew-form .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .crew-form label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+  .sw { border: 0; padding: 0; margin: 0; } .sw legend { font-size: 12px; color: var(--muted); padding: 0; margin-bottom: 4px; }
+  #swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+  .swb { width: 30px; height: 30px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--ink) 18%, transparent); background: var(--c); padding: 0; position: relative; }
+  .swb[aria-checked=true] { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .swb:focus-visible { outline: 3px solid var(--denim); outline-offset: 2px; }
+  .swb.custom { width: auto; border-radius: 99px; padding: 0 10px 0 28px; font-size: 12px; color: var(--ink); background: linear-gradient(90deg, var(--c) 0 24px, var(--bg) 24px); }
+  .crew-form input, .crew-form select, .crew-form textarea { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg);
+    border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; min-width: 0; }
+  .crew-form input[type=color] { padding: 2px; height: 36px; }
+  .crew-form :focus { outline: none; border-color: var(--denim); }
+  .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  /* schedules */
+  .sched-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .sched-list[hidden] { display: none; }
+  .sched { border: 1px solid var(--line); border-left: 4px solid var(--tint); border-radius: 12px; padding: 9px 11px; background: var(--bg); }
+  .sched:focus-visible { outline: 3px solid var(--denim); outline-offset: 2px; }
+  .s-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .s-top b { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .s-when, .s-last { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .s-when code { font-size: 12px; }
+  .s-count { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 700; }
+  .s-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+  .sched .s-btns .btn { padding: 4px 10px; font-size: 12px; }
+  .sched details { margin-top: 6px; font-size: 12px; }
+  .sched ol { margin: 4px 0 0; padding-left: 20px; color: var(--muted); }
+  .chip.active { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+  .chip.running { background: var(--tint); color: #fff; }
+  .chip.held { background: var(--warn); color: #fff; }
+  .s-empty { color: var(--muted); font-size: 13px; margin: 4px 0; }
+  .s-held { color: var(--warn); font-weight: 700; }
+  #schedPreview.err { color: var(--bad); }
+  .mb-next { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 13px; }
+  .mb-next[hidden] { display: none; }
+  .mb-next b { font-weight: 800; margin-right: 2px; }
+  .mb-next button { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 3px 10px; font-size: 12px; }
+  .mb-next button i { font-style: normal; color: var(--muted); }
+  .t-wait { color: var(--warn); font-weight: 700; }
+  .s-days { display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 0; font-size: 12px; color: var(--muted); }
+  .s-days legend { padding: 0 6px 0 0; float: left; line-height: 30px; }
+  .s-days label { display: inline-flex; align-items: center; gap: 4px; border: 2px solid var(--line); border-radius: 99px; padding: 3px 10px; color: var(--ink); cursor: pointer; }
+  .s-days label:has(input:checked) { border-color: var(--denim); background: color-mix(in srgb, var(--denim) 12%, transparent); }
+  .s-days input { margin: 0; }
+  #schedForm [hidden] { display: none !important; }
+  .e-sys .s-acts { display: inline-flex; gap: 6px; margin-left: 8px; font-style: normal; vertical-align: middle; }
+  .e-sys .s-acts .btn { font-size: 11px; padding: 2px 8px; }
+
+  /* live log */
+  #logpanel { position: fixed; z-index: 9; left: 0; right: 0; bottom: 0; height: min(42vh, 420px); display: flex; flex-direction: column;
+    background: var(--card); border-top: 2px solid var(--line); box-shadow: 0 -10px 30px rgba(0,0,0,.12); }
+  #logpanel[hidden] { display: none; }
+  .lp-head { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--line); font-weight: 800; }
+  .lp-head .muted { font-weight: 400; font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); flex: none; }
+  .dot.off { background: var(--bad); }
+  .feed { flex: 1; overflow: auto; font: 12.5px/1.6 ui-monospace, Menlo, monospace; padding: 6px 0; }
+  .fl { display: flex; gap: 10px; padding: 1px 14px; white-space: nowrap; cursor: pointer; }
+  .fl:hover { background: var(--bg); }
+  .fl time, .fl .tid { color: var(--muted); flex: none; }
+  .fl b { color: var(--tint); flex: none; min-width: 44px; }
+  .fl .txt { overflow: hidden; text-overflow: ellipsis; }
+  .fl.k-err .txt { color: var(--bad); }
+  .fl.k-tool .txt, .fl.k-sys .txt { color: var(--muted); }
+
+  /* panels: popups over the room */
+  .panel { display: none; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+  .panel.open { display: block; position: fixed; z-index: 8; left: 50%; top: calc(50% + 26px); transform: translate(-50%, -50%);
+    width: min(720px, calc(100vw - 24px)); max-height: calc(100vh - 100px); overflow: auto; padding: 16px 18px; box-shadow: 0 24px 70px rgba(0,0,0,.32); animation: pop .18s ease-out; }
+  .panel.wide.open { width: min(1180px, calc(100vw - 24px)); }
+  .panel.open .p-head { position: sticky; top: -16px; z-index: 1; margin: -16px -18px 12px; padding: 14px 18px 10px; background: var(--card); border-bottom: 1px solid var(--line); }
+  @keyframes pop { from { opacity: 0; } }
+  @media (min-width: 1100px) { /* a narrow popup sits right of centre, so the object it came from stays in view on the left */
+    .panel:not(.wide).open { left: auto; right: max(16px, 5vw); transform: translateY(-50%); width: min(640px, 48vw); }
+  }
+  .p-head { display: flex; align-items: center; gap: 10px; margin: -2px 0 10px; }
+  .p-head h2 { margin: 0; font-size: 17px; font-weight: 800; }
+  .p-head .muted { font-size: 13px; flex: 1; min-width: 0; }
+  .p-x { margin-left: auto; }
+  .panel .order { border: 0; padding: 0; background: none; }
+  .needs .p-head h2 { color: var(--warn); }
+  #needsEmpty { margin: 4px 0; }
+  .hud-needs b { font-weight: 800; } .hud-needs.on { background: var(--warn); color: #fff; border-color: var(--warn); }
+  #menu { position: fixed; z-index: 12; top: 64px; right: 14px; width: min(300px, calc(100vw - 28px)); max-height: calc(100vh - 90px); overflow: auto;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px; box-shadow: 0 16px 40px rgba(0,0,0,.2); }
+  #menu[hidden] { display: none; }
+  .m-btn { border: 0; background: none; padding: 0; text-align: left; font: inherit; color: inherit; border-radius: 8px; }
+  .m-btn:hover .bar, .m-btn[aria-expanded=true] .bar { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  #winPop { position: fixed; z-index: 12; top: 64px; width: min(340px, calc(100vw - 28px)); background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0,0,0,.2); font-size: 13px; }
+  #winPop[hidden] { display: none; }
+  #winPop h4 { margin: 0 0 8px; font-size: 13px; } #winPop p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+  .wu { display: grid; grid-template-columns: 70px 1fr auto; gap: 4px 8px; align-items: center; margin: 5px 0; }
+  .wu i { display: block; height: 8px; border-radius: 99px; background: var(--tint); min-width: 3px; }
+  .wu b { font-weight: 700; } .wu small { color: var(--muted); white-space: nowrap; }
+  #menu h4 { margin: 8px 8px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  #menu button { display: flex; width: 100%; gap: 8px; align-items: center; text-align: left; border: 0; background: none; border-radius: 9px; padding: 7px 9px; font-size: 14px; }
+  #menu button:hover, #menu button:focus-visible { background: var(--bg); outline: none; }
+  #menu button i { width: 9px; height: 9px; border-radius: 50%; background: var(--tint); flex: none; }
+  #menu button small { margin-left: auto; color: var(--muted); font-size: 12px; }
+  #scrim { position: fixed; inset: 0; z-index: 7; background: rgb(18 16 28 / .28); }
+  #scrim[hidden] { display: none; }
+  .hud-clock { display: block; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  @media (max-width: 1180px) { header .lbl { display: none; } } /* icons only, so the bar stays one row */
+  /* without WebGL 2 there is no room: one clear page instead */
+  #no3d { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+  #no3d[hidden] { display: none; }
+  #no3d > div { max-width: 520px; text-align: center; } #no3d h2 { margin: 12px 0 8px; } #no3d p { color: var(--muted); line-height: 1.5; }
+  /* deliverables shelf */
+  .dl-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; } .dl-bar input { flex: 1 1 220px; }
+  .dl-wrap { overflow-x: auto; }
+  .dl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .dl th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 700; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+  .dl td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .dl td small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .dl .gone { color: var(--muted); text-decoration: line-through; } .dl .gone-tag { color: var(--bad); font-weight: 700; font-size: 11.5px; }
+  .dl .mn { display: inline-flex; gap: 6px; align-items: center; } .dl .mn i { width: 9px; height: 9px; border-radius: 50%; background: var(--tint); }
+  .dl button.lnk { border: 0; background: none; padding: 0; color: var(--link); text-align: left; text-decoration: underline dotted; text-underline-offset: 3px; }
+  /* guidance board */
+  .g-list { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
+  .g-list li { display: flex; gap: 8px; align-items: center; background: var(--note, #fff3a3); border-radius: 10px; padding: 6px 6px 6px 12px; color: #2b2a33; box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+  .g-list li::before { content: "📌"; font-size: 14px; }
+  .g-list input { flex: 1; min-width: 0; font: inherit; font-size: 14px; color: #2b2a33; background: transparent; border: 1.5px solid transparent; border-radius: 8px; padding: 5px 7px; }
+  .g-list input:focus { outline: none; border-color: var(--denim); background: rgba(255,255,255,.6); }
+  .g-list button { border: 0; background: none; color: #6f6c7a; font-size: 18px; padding: 0 6px; }
+  .g-list button:hover { color: var(--bad); }
+  .g-empty { color: var(--muted); font-size: 14px; }
+  /* NR office */
+  .mr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .mr-card { display: grid; grid-template-columns: 64px 1fr; gap: 4px 12px; align-content: start; background: var(--bg); border: 1px solid var(--line); border-top: 4px solid var(--tint); border-radius: 14px; padding: 12px; }
+  .mr-card .mpv { width: 64px; height: 98px; grid-row: span 3; }
+  .mr-card h3 { margin: 0; font-size: 16px; } .mr-card h3 .chip { margin-left: 6px; }
+  .mr-card .ti { font-size: 13px; color: var(--muted); }
+  .mr-card .role { grid-column: 1 / -1; font-size: 13px; line-height: 1.4; margin-top: 4px; }
+  .mr-stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .mr-stats b { color: var(--ink); }
+  .badges { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .badge { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--tint, var(--denim)) 16%, var(--card)); border: 1px solid color-mix(in srgb, var(--tint, var(--denim)) 40%, transparent); }
+  .mr-card .crew-btns { grid-column: 1 / -1; margin-top: 6px; }
+  .mr-hire { display: grid; place-items: center; min-height: 160px; border: 2px dashed var(--line); border-radius: 14px; background: none; font-weight: 800; font-size: 15px; color: var(--muted); }
+  .mr-hire:hover { border-color: var(--denim); color: var(--ink); }
+  .mr-edit { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: start; }
+  .mr-prev { position: sticky; top: 50px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+  .mr-prev .mpv { width: 110px; height: 168px; }
+  .mr-prev b { display: block; margin-top: 4px; }
+  .skills { border: 2px solid var(--line); border-radius: 12px; padding: 8px 10px; display: grid; gap: 8px; }
+  .skills legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+  .sk-list { max-height: 210px; overflow: auto; display: grid; gap: 2px; }
+  .sk-list label { display: grid; grid-template-columns: 20px 1fr; gap: 0 6px; align-items: start; color: var(--ink); font-size: 13px; padding: 4px 6px; border-radius: 8px; cursor: pointer; }
+  .sk-list label:hover { background: var(--bg); }
+  .sk-list small { grid-column: 2; color: var(--muted); font-size: 12px; }
+  .sk-list input { margin-top: 3px; }
+  /* arcade */
+  .ar-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ar-tabs button[aria-selected=true], .ar-modes button[aria-checked=true] { background: var(--yellow); color: #2b2a33; border-color: var(--yellow-d); font-weight: 800; }
+  .ar-modes { display: flex; gap: 6px; margin: -2px 0 10px; } .ar-modes:empty { display: none; } .ar-modes button { font-size: 12.5px; padding: 4px 10px; }
+  .ar-body { display: grid; grid-template-columns: minmax(0, 600px) 240px; justify-content: center; gap: 18px; align-items: start; }
+  #arCanvas { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; background: #1c2340; touch-action: none; display: block; }
+  .ar-side h4 { margin: 0 0 6px; } .ar-side ol { margin: 0 0 10px; padding-left: 22px; font-size: 14px; } .ar-side p { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .mr-edit, .ar-body { grid-template-columns: 1fr; }
+    .mr-prev { position: static; }
+    .meters { display: none; }
+    .admin { grid-template-columns: 1fr; }
+    .crew-form .grid { grid-template-columns: 1fr 1fr; }
+    .mb-prog { display: none; } .mb-items { padding-left: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+</style>
+<script>try { const t = localStorage.getItem('hq-theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch {}</script><!-- before paint, so no flash -->
+</head>
+<body>
+<div id="no3d" role="alert" hidden><div><div class="logo" style="margin:auto;width:56px;height:56px;font-size:30px">🍌</div>
+  <h2>Nimion HQ needs WebGL 2</h2>
+  <p>The crew lives in a 3D office, and this browser could not start it. Turn on hardware acceleration (graphics acceleration) in your browser settings,
+  or open this page in a recent Chrome, Edge, Firefox or Safari. Your crew and jobs are safe: nothing runs differently on the server.</p>
+  <button class="go" type="button" onclick="location.reload()">Retry</button></div></div>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">🍌</div>
+    <div><h1>Nimion HQ</h1><time class="hud-clock" id="hudClock"></time></div>
+  </div>
+  <span id="conn" hidden>● reconnecting…</span>
+  <div class="meters" id="meters"></div>
+  <button class="btn hud-needs" id="needsBtn" type="button" data-go="needs" title="Approvals and questions waiting for you">✋ <b id="needsN">0</b></button>
+  <button class="go" id="newBtn" type="button" data-go="compose">＋ New job</button>
+  <button class="btn" id="logBtn" type="button" aria-expanded="false" aria-controls="logpanel" title="Live log (L)">📜<span class="lbl"> Live log</span></button>
+  <button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu" title="Everything in the room">☰<span class="lbl"> Room</span></button>
+  <button class="btn icon" id="themeBtn" type="button" title="Dark mode (D)" aria-label="Dark mode" aria-pressed="false"></button>
+  <button class="btn icon" id="fullBtn" type="button" title="Full screen (F)" aria-label="Full screen" aria-pressed="false"></button>
+  <button class="btn" id="setupBtn" type="button" title="Setup">🚀<span class="lbl"> Setup</span></button>
+</header>
+<nav id="menu" aria-label="Everything in the room" hidden></nav>
+<div id="winPop" role="dialog" aria-label="Who used the 5-hour window" hidden></div>
+
+<main>
+  <section id="lab" aria-label="The crew"></section>
+
+  <section class="panel" data-panel="compose" aria-labelledby="h-compose">
+    <div class="p-head"><h2 id="h-compose">📨 New job</h2><span class="muted">give it to the boss to plan, or straight to one nimion</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <form class="order" id="order">
+      <textarea id="prompt" rows="3" placeholder="What should the crew do?  e.g. Add a /health endpoint with a test, then review it" aria-label="Task"></textarea>
+      <div class="attach" id="o-att"></div>
+      <div class="row">
+        <label>Give it to <select id="who"></select></label>
+        <span class="hint">Drop or paste files · ⌘/Ctrl + Enter to send</span>
+        <button class="go" id="send">Send it 🍌</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel needs none" data-panel="needs" aria-labelledby="h-needs" aria-live="polite">
+    <div class="p-head"><h2 id="h-needs">✋ Needs you</h2><span class="muted">tool approvals and questions</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div class="asks" id="asks"></div><p class="empty" id="needsEmpty">Nothing needs you right now. 🍌</p>
+  </section>
+
+  <section class="panel wide" data-panel="board" aria-labelledby="h-board">
+    <div class="p-head"><h2 id="h-board">📋 Mission board</h2><span class="muted" id="mbSum">every job, grouped by the job it came from</span>
+      <button class="btn" id="clear" type="button" title="Take finished jobs off the board. They stay in each chat's job list.">Clear finished</button><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div class="mb-next" id="mbNext" hidden></div>
+    <div class="mb" id="mb"></div>
+  </section>
+
+  <section class="panel wide" data-panel="files" aria-labelledby="h-files">
+    <div class="p-head"><h2 id="h-files">🗄️ Deliverables</h2><span class="muted" id="dlSum">every file the crew made · only paths are kept, never copies</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div class="dl-bar"><input class="att-path" id="dlQ" type="search" placeholder="Search file names and jobs" aria-label="Search deliverables">
+      <select id="dlNimion" aria-label="Filter by nimion"></select><select id="dlJob" aria-label="Filter by job"></select><select id="dlType" aria-label="Filter by type"></select></div>
+    <div class="dl-wrap"><table class="dl"><thead><tr><th>File</th><th>Job</th><th>Nimion</th><th>When</th><th>Type</th></tr></thead><tbody id="dlList"></tbody></table></div>
+  </section>
+
+  <section class="panel" data-panel="guidance" aria-labelledby="h-guidance">
+    <div class="p-head"><h2 id="h-guidance">📌 Guidance board</h2><span class="muted" id="memSum">guidance the boss follows on every job</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <ol class="g-list" id="gList"></ol>
+    <form class="att-row" id="gAdd"><input class="att-path" id="gNew" maxlength="500" placeholder="Add guidance, e.g. Keep reports under one page" aria-label="New guidance"><button class="go">📌 Pin it</button></form>
+    <div class="row"><button class="btn" type="button" id="memUndo">Undo last change</button></div>
+    <p class="note">The boss follows every note on every job and puts the parts that matter into its task contracts. Tell it lasting guidance in any job ("from now on…") and it pins a note here, after checking it doesn't clash with one already here. Edit a note and press Enter, or × to take it down.</p>
+  </section>
+
+  <section class="panel wide" data-panel="mr" aria-labelledby="h-mr">
+    <div class="p-head"><h2 id="h-mr">🚪 NR office</h2><span class="muted">Nimion Resources · hire, edit and retire your crew</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div id="mrList"><div class="mr-grid" id="mrCards"></div></div>
+    <form class="crew-form" id="crewForm" hidden>
+      <div class="row" style="margin-top:0"><button type="button" class="btn" id="cfCancel">← Back to the crew</button><h4 id="cfTitle" style="margin:0">Hire a nimion</h4></div>
+      <div class="mr-edit">
+        <div class="mr-prev" aria-live="polite"><div id="cfPrev"></div><b id="cfPrevName">New nimion</b><span class="note">live preview</span></div>
+        <div style="display:grid;gap:8px">
+          <div class="grid">
+            <label>Name <input name="name" required maxlength="20" pattern="[A-Za-z][A-Za-z0-9_\-]*" placeholder="Zed"></label>
+            <label>Title <input name="title" required maxlength="60" placeholder="Designer · makes UI mockups"></label>
+            <label>Model <select name="model"><option value="">Your default</option><option>opus</option><option>sonnet</option><option>haiku</option></select></label>
+            <label>Eyes <select name="eyes"><option value="2">Two</option><option value="1">One</option></select></label>
+            <label>Prop <select name="prop"></select></label>
+            <label>Style <select name="style"></select></label>
+          </div>
+          <fieldset class="sw"><legend>Colour</legend><div role="radiogroup" aria-label="Colour" id="swatches"></div><input type="hidden" name="tone" value="#ffaa33"></fieldset>
+          <label>Role: its standing instructions <textarea name="role" rows="4" required maxlength="4000" placeholder="You are Zed, a product designer. You turn rough ideas into clear UI mockups and explain your choices."></textarea></label>
+          <fieldset class="skills"><legend>Skills: Claude Code skills it loads when a job fits <span id="skState"></span></legend>
+            <div class="badges" id="skChosen"></div>
+            <div class="att-row" style="margin:0"><input class="att-path" id="skFind" placeholder="Search installed skills…" aria-label="Search skills"><button type="button" class="btn" id="skProbe">Check again</button></div>
+            <div class="sk-list" id="skList" role="group" aria-label="Installed skills"></div>
+          </fieldset>
+          <label>Tools it may use without asking, one per line <textarea name="allow" rows="3" placeholder="WebSearch&#10;Bash(npm test*)&#10;mcp__github__get_issue"></textarea></label>
+          <div class="row"><button class="go" id="cfSave">Save nimion</button></div>
+          <p class="note">The boss sees every nimion's title, the first sentence of its role and its skills, so it routes work by skill as well as persona.</p>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel wide" data-panel="arcade" aria-labelledby="h-arcade">
+    <div class="p-head"><h2 id="h-arcade">🕹️ Arcade</h2><span class="muted">a quick game while the crew works · idle nimions come and cheer</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div class="ar-tabs" role="tablist" id="arTabs"></div>
+    <div class="ar-modes" role="radiogroup" aria-label="Players" id="arModes"></div>
+    <div class="ar-body"><canvas id="arCanvas" width="480" height="360" aria-label="Game"></canvas>
+      <div class="ar-side"><h4>High scores</h4><ol id="arScores"></ol><p id="arHelp"></p><button class="go" type="button" id="arStart">▶ Play</button></div></div>
+  </section>
+
+  <section class="panel" data-panel="context" aria-labelledby="h-context">
+    <div class="p-head"><h2 id="h-context">📚 Linked context</h2><span class="muted"><span id="n-ctx">0</span> folders every nimion can explore</span><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <div class="chips" id="ctxChips"></div>
+    <form class="att-row" id="ctxForm">
+      <input class="att-path" name="path" required placeholder="Folder path, e.g. ~/code/docs" aria-label="Folder to link">
+      <input class="att-path" name="note" maxlength="200" placeholder="What is it? (optional)" aria-label="Note for the crew">
+      <button class="go">Link</button>
+    </form>
+    <p class="note">Every nimion can read these folders on every task (Read, ls, grep, find). Changing anything in them needs your approval. ⌥⌘C in Finder copies a folder's path.</p>
+  </section>
+  <section class="panel wide" data-panel="schedules" aria-labelledby="h-schedules">
+    <div class="p-head"><h2 id="h-schedules">⏰ Schedules</h2><span class="muted" id="schedSum">jobs that run later or on a repeat</span><button class="btn" type="button" id="schedBell" hidden title="Show a notification when a scheduled run finishes, fails or needs you, while this page is in the background">🔔 Notify me</button><button class="btn" type="button" id="schedNew">＋ New schedule</button><button class="btn p-x" type="button" aria-label="Close">✕</button></div>
+    <p class="note s-held" id="schedHeld" hidden></p>
+    <ul class="sched-list" id="schedList"></ul>
+    <form class="crew-form" id="schedForm" hidden>
+      <h4 id="schedFormTitle">New schedule</h4>
+      <div class="grid">
+        <label>Who does it<select name="nimion" id="schedWho"></select></label>
+        <label>Name<input name="name" maxlength="60" placeholder="Morning PR digest"></label>
+        <label>When<select name="kind" id="schedKind"><option value="cron">Repeat</option><option value="at">Once, at a time</option><option value="in">Once, after a while</option></select></label>
+      </div>
+      <div class="grid" id="schedRepeat">
+        <label>Repeats<select name="preset"><option value="daily">every day</option><option value="weekdays">on weekdays</option><option value="weekly">on the days I pick</option>
+          <option value="hours">every few hours</option><option value="monthly">once a month</option><option value="cron">custom rule (cron)</option></select></label>
+        <label data-p="daily weekdays weekly monthly">At<input type="time" name="time" value="09:00"></label>
+        <label data-p="hours">Every<select name="every"><option value="1">hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="6">6 hours</option><option value="8">8 hours</option><option value="12">12 hours</option></select></label>
+        <label data-p="monthly">On day<input type="number" name="dom" min="1" max="31" value="1"></label>
+        <label data-p="cron">Rule: minute hour day month weekday<input name="cron" placeholder="0 9 * * 1-5" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <fieldset class="s-days" data-p="weekly"><legend>On</legend><label><input type="checkbox" name="day" value="1">Mon</label><label><input type="checkbox" name="day" value="2">Tue</label><label><input type="checkbox" name="day" value="3">Wed</label><label><input type="checkbox" name="day" value="4">Thu</label><label><input type="checkbox" name="day" value="5">Fri</label><label><input type="checkbox" name="day" value="6">Sat</label><label><input type="checkbox" name="day" value="0">Sun</label></fieldset>
+      <label id="schedOnce"><span id="schedWhenL">Date and time</span><input name="when" id="schedWhen" autocomplete="off"></label>
+      <p class="note" id="schedPreview" aria-live="polite"></p>
+      <label>The job<textarea name="prompt" rows="4" required maxlength="20000" placeholder="What should they do each time? Point to files by path."></textarea></label>
+      <div id="s-att"></div>
+      <details><summary>Options</summary><div class="grid">
+        <label>If the last run is still going<select name="overlap"><option value="skip">skip this run</option><option value="queue">queue one more</option></select></label>
+        <label>Runs missed while the Mac slept<select name="catchUp"><option value="latest">run the latest once (if under 6 h late)</option><option value="none">skip them</option></select></label>
+        <label>Near the plan limit<select name="atLimit"><option value="wait">wait for the window to reset</option><option value="skip">skip this run</option></select></label>
+        <label>Stop after this many runs<input name="maxRuns" type="number" min="1" max="10000" placeholder="no limit"></label>
+        <label>Tell each run what the last one reported<select name="carry"><option value="1">yes</option><option value="0">no</option></select></label>
+      </div></details>
+      <div class="s-btns"><button class="go">Save</button><button class="btn" type="button" id="schedCancel">Cancel</button></div>
+    </form>
+    <p class="note" id="schedWhere"></p>
+  </section>
+</main>
+<div id="scrim" hidden></div>
+
+<aside id="drawer" role="dialog" aria-label="Task details" hidden>
+  <div class="d-head">
+    <div><div class="d-id" id="d-id"></div><h2 id="d-title"></h2><div class="d-meta" id="d-meta"></div><div class="d-meta" id="d-use"></div>
+      <select id="jobs" class="jobs" aria-label="Switch to another job" hidden></select></div>
+    <div class="d-actions">
+      <button class="btn stop" id="stop" type="button">Stop</button>
+      <button class="btn" id="close" type="button" aria-label="Close">✕</button>
+    </div>
+  </div>
+  <div class="log" id="log"></div>
+  <div id="qbox" hidden></div>
+  <form id="reply">
+    <textarea id="replyText" rows="2" placeholder="Reply to continue this task. The nimion remembers the conversation." aria-label="Reply"></textarea>
+    <div class="r-row"><div class="attach" id="r-att"></div><button class="go" id="replyBtn">Reply</button></div>
+  </form>
+</aside>
+<aside id="logpanel" aria-label="Live log" hidden>
+  <div class="lp-head"><span class="dot" id="lpDot"></span>Live log<span class="muted">every nimion, newest at the bottom · click a line to open its task · also in ~/Library/Logs/nimion-hq.log</span>
+    <button class="btn" id="lpClose" type="button" aria-label="Close the live log">✕</button></div>
+  <div class="feed" id="feed" role="log" aria-live="off"></div>
+</aside>
+<div id="toast" role="status" hidden></div>
+
+<div id="fmenu" role="menu" hidden><button type="button" role="menuitem" data-how="vscode">VS Code</button><button type="button" role="menuitem" data-how="browser">Browser</button><button type="button" role="menuitem" data-how="finder">Finder</button></div>
+<dialog id="fprev" aria-labelledby="fpName"><div class="fp-head"><b id="fpName"></b><button class="btn" type="button" data-how="vscode">VS Code</button><button class="btn" type="button" data-how="browser">Browser</button><button class="btn" type="button" data-how="finder">Finder</button><button class="btn" type="button" id="fpClose" aria-label="Close">✕</button></div><div class="fp-body" id="fpBody"></div></dialog>
+<dialog id="pal" aria-label="Command palette"><input id="palQ" type="text" role="combobox" aria-expanded="true" aria-controls="palList" aria-autocomplete="list" placeholder="Jump to a nimion, job, popup or action…" autocomplete="off" spellcheck="false">
+  <ul id="palList" role="listbox" aria-label="Results"></ul><p class="pal-foot">↑ ↓ to move · Enter to open · Esc to close · past jobs are searched as you type</p></dialog>
+<dialog id="keys" aria-labelledby="keysTitle"><h2 id="keysTitle">⌨️ Keyboard shortcuts</h2><table id="keysList"></table><p>Single keys work anywhere except while you type in a box, and they rest while the arcade is open so the games get the keys.</p><div class="su-btns"><button class="go" type="button" id="keysClose">Got it</button></div></dialog>
+<dialog id="setup" aria-labelledby="setupTitle">
+  <h2 id="setupTitle">🚀 Set up Nimion HQ</h2>
+  <p class="muted">Each nimion is your own Claude Code, running in the background. It uses your Claude plan and its limits (never an API key), and the same MCP servers, connectors, plugins and skills you have in Claude Code.</p>
+  <ol class="steps" id="suSteps"></ol>
+  <h3>🔌 Tools your nimions can use</h3>
+  <p class="muted">Everything <code>claude mcp list</code> shows for the crew's folder: your MCP servers, plugins and claude.ai connectors. Add more with <code>claude mcp add</code> or in claude.ai → Settings → Connectors. To sign a server in, run <code>claude</code>, then <code>/mcp</code>.</p>
+  <button class="btn" type="button" id="suMcp">Check my MCP servers and connectors</button>
+  <ul id="suMcpList"></ul>
+  <div class="su-btns"><button class="btn" type="button" id="suCheck">Check again</button><button class="go" type="button" id="suDone">Done</button></div>
+</dialog>
+
+<script src="md.js"></script><!-- markdown for the chat -->
+<script src="classic.js"></script><!-- an optional look pack: empty unless the server offers one -->
+<script>if (window.HQ_CLASSIC && HQ_CLASSIC.favicon) document.querySelector('link[rel=icon]').href = HQ_CLASSIC.favicon;</script>
+<script src="world.js"></script><!-- small helpers: guidance lines, deep links, portraits, board groups -->
+<script src="games.js"></script><!-- the arcade games -->
+<script type="importmap">{ "imports": { "three": "/vendor/three/three.module.min.js", "three/addons/": "/vendor/three/addons/" } }</script>
+<script type="module" src="lab3d.js"></script><!-- the 3D office: the app itself -->
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const COLORS = ['#f08c00', '#2f5ea8', '#2e9e5b', '#b04fd0', '#d64545', '#0f9db0'];
+const FINISHED = ['done', 'failed', 'stopped'];
+let S = null, openId = null, detailSeq = 0, lastSig = '';
+
+const tint = name => COLORS[Math.max(0, S.crew.findIndex(c => c.name === name)) % COLORS.length];
+const dur = ms => {
+  const s = Math.max(0, Math.round(ms / 1000)), m = Math.floor(s / 60), h = Math.floor(m / 60);
+  return s < 60 ? `${s}s` : m < 60 ? `${m}m ${s % 60}s` : h < 48 ? `${h}h ${m % 60}m` : `${Math.floor(h / 24)}d ${h % 24}h`;
+};
+// Usage of recorded runs: tokens and time first (it is a subscription); a dollar figure is only the notional API price.
+const useText = (u, short) => !u?.runs ? 'usage not recorded' : `${HQW.kfmt(u.tokens)} tokens` + (short ? '' : ` (${HQW.kfmt(u.in + u.cacheR + u.cacheW)} in, ${HQW.kfmt(u.out)} out)`) +
+  ` · ${dur(u.ms)} · ${u.runs} run${u.runs > 1 ? 's' : ''}` + (u.costRuns && !short ? ` · ~$${u.cost.toFixed(2)} notional` : '');
+const useShort = u => (!u?.runs ? '—' : `${HQW.kfmt(u.tokens)} · ${dur(u.ms)}`);
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) })
+  .then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText); return j; });
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.tm); toast.tm = setTimeout(() => t.hidden = true, 4000); }
+
+// The 3D office (lab3d.js) draws the crew and acts out what each nimion is doing.
+function onNimionClick(name) { // open what this nimion is working on, or start a task for it
+  const mine = S.tasks.filter(x => x.nimion === name);
+  const pick = mine.find(x => x.status === 'needs-you') || mine.find(x => x.status === 'working') || mine.at(-1);
+  if (pick) return openTask(pick.id);
+  fetch(`/api/history?nimion=${encodeURIComponent(name)}&limit=1`).then(r => r.json()).then(([last]) => { // its jobs were cleared from the board
+    if (last) openTask(last.id); else { openPanel('compose'); $('#who').value = name; $('#prompt').focus(); }
+  });
+}
+// Modules run after this script but before DOMContentLoaded, so by then window.Lab is the 3D office. The room is the app:
+// without WebGL 2 (or if it fails to start) the page says what is needed instead.
+let labOn = false;
+addEventListener('DOMContentLoaded', () => {
+  window.Lab?.mount($('#lab'), { onNimionClick, onObjectClick: id => (id === 'log' ? toggleLog(true, true) : openPanel(id)), full: true });
+  if (!window.Lab?.world) { $('#no3d').hidden = false; return; }
+  labOn = true;
+  startFeed(); // the room's log screen shows the newest lines
+  Lab.sky(skyMode);
+  fillProps();
+  if (S) { Lab.update(S); Lab.deliverables(S.deliverables || 0); route(); }
+});
+
+// "Who used the window": every recorded run since the 5-hour window began, per nimion (cleared jobs included).
+function renderWindow() {
+  const pop = $('#winPop'), w = S?.window, by = w?.by || [], top = by[0]?.tokens || 1, total = by.reduce((n, x) => n + x.tokens, 0);
+  pop.innerHTML = `<h4>Who used this 5-hour window</h4>` + (by.map(x => `<div class="wu" style="--tint:${tint(x.nimion)}"><b>${esc(x.nimion)}</b>` +
+    `<i style="width:${Math.max(2, x.tokens / top * 100)}%"></i><small>${HQW.kfmt(x.tokens)} · ${dur(x.ms)} · ${Math.round(x.tokens / (total || 1) * 100)}%</small></div>`).join('')
+    || '<p style="margin:0">No recorded runs in this window yet.</p>') +
+    `<p>Since ${w ? new Date(w.since).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}. Tokens are in + out, cache included; the meter's % comes from Claude itself.</p>`;
+}
+function toggleWindow(open = $('#winPop').hidden) {
+  const pop = $('#winPop'), b = $('#winBtn');
+  pop.hidden = !open; b?.setAttribute('aria-expanded', String(open));
+  if (open && b) { renderWindow(); const r = b.getBoundingClientRect(); pop.style.left = Math.max(14, Math.min(innerWidth - pop.offsetWidth - 14, r.left - 10)) + 'px'; }
+}
+document.addEventListener('click', e => { if (e.target.closest('#winBtn')) return toggleWindow(); if (!$('#winPop').hidden && !e.target.closest('#winPop')) toggleWindow(false); });
+function renderMeters() {
+  const l = S.limits, w = l?.unifiedWindows || {}, names = { five_hour: '5-hour', seven_day: 'Week' };
+  const frac = u => (u > 1 ? u / 100 : u || 0);
+  const meters = Object.entries(w).map(([k, v]) => {
+    const u = frac(v.utilization), cls = u >= S.maxUtil ? 'bad' : u >= .7 ? 'warn' : '';
+    const tip = `New runs stop at ${Math.round(S.maxUtil * 100)}% (the mark)` + (v.resetsAt ? ` · resets in ${dur(v.resetsAt * 1000 - Date.now())}` : '');
+    if (k === 'five_hour') return `<button type="button" class="meter m-btn" id="winBtn" aria-expanded="${!$('#winPop').hidden}" aria-controls="winPop" title="${tip} · click: who used this window">` + `<div class="m-lbl"><span>🍌 ${names[k] || k}</span><b>${Math.round(u * 100)}%</b></div>
+      <div class="bar"><i class="${cls}" style="width:${Math.min(100, u * 100)}%"></i><s style="left:${S.maxUtil * 100}%"></s></div></button>`;
+    return `<div class="meter" title="${tip}"><div class="m-lbl"><span>🍌 ${names[k] || k}</span><b>${Math.round(u * 100)}%</b></div>
+      <div class="bar"><i class="${cls}" style="width:${Math.min(100, u * 100)}%"></i><s style="left:${S.maxUtil * 100}%"></s></div></div>`;
+  }).join('') || '<span class="muted" style="font-size:12px">Plan usage shows after the first run</span>';
+  $('#meters').innerHTML = meters + (S.breaker
+    ? `<span class="breaker on" title="No new runs start until the limit resets">⛔ Paused: ${esc(S.breaker)}</span>` : '');
+}
+
+function card(t, step) {
+  const waits = [].concat(t.after ?? []);
+  const meta = [t.parent && !step && `↳ from #${t.parent}`, waits.length && t.status === 'queued' && `after #${waits.join(', #')}`, t.attach?.length && `📎 ${t.attach.length}`, t.ms && dur(t.ms)].filter(Boolean).join(' · ');
+  const held = t.schedule && t.status === 'queued' && !t.started && S.sched?.held; // scheduled runs wait at a lower usage limit than yours
+  return `<button class="task" type="button" data-id="${t.id}" style="--tint:${tint(t.nimion)}">
+    <div class="t-top">${step ? `<span class="step">${step}.</span>` : ''}<span>#${t.id}</span><b>${esc(t.nimion)}</b><span class="chip ${t.status}">${t.status}</span></div>
+    <div class="ttl">${esc(t.title)}</div>${meta ? `<div class="t-meta">${esc(meta)}</div>` : ''}${held ? `<div class="t-meta t-wait">⏰ waiting: ${esc(held)}</div>` : ''}</button>`;
+}
+
+// A question's suggested answers. "Label — what happens" shows the label in bold.
+function opts(t) {
+  if (!t.options?.length) return '';
+  return `<div class="opts">${t.options.map((o, i) => {
+    const m = o.match(/^(.+?)(?:\s[—–-]\s|:\s)(.+)$/);
+    return `<button type="button" class="opt" data-pick="${t.id}" data-i="${i}"><i>${i + 1}</i><span>${m ? `<b>${md.inline(m[1])}</b> <small>${md.inline(m[2])}</small>` : `<b>${md.inline(o)}</b>`}</span></button>`;
+  }).join('')}</div>`;
+}
+
+// Tool approvals and questions. Rebuilt only when the set changes, so hover and focus survive.
+let needsSig = '';
+function renderNeeds() {
+  const qs = S.tasks.filter(t => t.status === 'needs-you');
+  const n = S.approvals.length + qs.length;
+  document.title = n ? `(${n}) Nimion HQ` : 'Nimion HQ';
+  $('#needsN').textContent = n;
+  const sig = S.approvals.map(a => 'a' + a.id).concat(qs.map(t => 'q' + t.id)).join();
+  if (sig === needsSig) return;
+  needsSig = sig;
+  $('#needsEmpty').hidden = !!n;
+  $('#needsN').textContent = n;
+  $('#needsBtn').classList.toggle('on', !!n);
+  const input = i => i.command || i.file_path || i.url || i.query || JSON.stringify(i, null, 2);
+  $('#asks').innerHTML = S.approvals.map(a => `
+    <div class="ask" style="--tint:${tint(a.nimion)}">
+      <div class="ask-top"><b>${esc(a.nimion)}</b> wants to use <b>${esc(a.tool)}</b> · <a href="#" data-open="${a.taskId}">task #${a.taskId}</a></div>
+      <code>${esc(input(a.input))}</code>
+      <div class="ask-btns"><button class="allow" type="button" data-aid="${a.id}" data-allow="1">Allow</button><button class="deny" type="button" data-aid="${a.id}">Deny</button></div>
+    </div>`).join('') + qs.map(t => `
+    <div class="ask q-card" style="--tint:${tint(t.nimion)}" data-open="${t.id}" title="Open the chat to answer">
+      <div class="ask-top"><b>${esc(t.nimion)}</b> asks · task #${t.id}</div>
+      <div class="q md">${md(t.question)}</div>
+      ${opts(t)}
+      <div class="ask-btns"><button class="go" type="button" data-open="${t.id}">${t.options?.length ? 'Write your own answer' : 'Answer in chat'}</button></div>
+    </div>`).join('');
+}
+
+// The mission board, grouped by thread (HQW.boardGroups). Finished groups start collapsed; your open/closed choice is kept.
+const mbOpen = new Map(), ST = { 'needs-you': 'needs you', working: 'working', queued: 'queued', done: 'done', failed: 'failed', stopped: 'stopped' };
+let mbSig = '';
+function renderBoard(force) {
+  const gs = HQW.boardGroups(S.tasks, S.crew.find(c => c.boss)?.name);
+  const next = (S.schedules || []).filter(x => !x.paused && x.nextAt && x.nextAt - Date.now() < 86400_000).sort((a, b) => a.nextAt - b.nextAt).slice(0, 3);
+  $('#mbNext').hidden = !next.length;
+  $('#mbNext').innerHTML = next.length ? '<b>⏰ Next up</b>' + next.map(x => `<button type="button" data-go="schedules" title="${esc(x.cron ? HQW.describeCron(x.cron) : 'once')}">${fmtWhen(x.nextAt)} · ${esc(x.name)} <i>${esc(x.nimion)}</i></button>`).join('') : '';
+  const sig = JSON.stringify([gs.map(g => [g.key, g.status, g.title, g.items.map(t => [t.id, t.status, t.title, t.ms, t.runs?.length, t.started]), g.root?.runs?.length]), [...mbOpen], S.sched?.held]);
+  if (sig === mbSig && !force) return;
+  mbSig = sig;
+  const open = gs.filter(g => !g.finished).length;
+  $('#mbSum').textContent = gs.length ? `${open} open · ${gs.length - open} finished · grouped by the job it came from` : 'every job, grouped by the job it came from';
+  $('#clear').hidden = !S.tasks.some(t => FINISHED.includes(t.status));
+  const focus = document.activeElement?.closest?.('#mb [data-g], #mb [data-id], #mb [data-open]'), fkey = focus && (focus.dataset.g || focus.dataset.id || focus.dataset.open);
+  $('#mb').innerHTML = gs.map(g => {
+    const exp = mbOpen.has(g.key) ? mbOpen.get(g.key) : !g.finished, icon = { thread: '📨', direct: '🎯', sched: '⏰' }[g.kind];
+    const when = (g.kind === 'thread' ? `#${g.id} · ` : '') + (g.at ? ago(g.at) : '');
+    const prog = g.total ? `${g.done} of ${g.total} ${g.kind === 'thread' ? (g.total === 1 ? 'step ' : 'steps ') : ''}done` : g.root?.status === 'working' ? 'planning' : g.kind === 'thread' ? 'no steps' : '';
+    const use = HQW.sumUsage((g.root ? [g.root] : []).concat(g.items));
+    const useTip = use.runs ? useText(use) : 'usage not recorded';
+    const ttl = g.root ? `<button class="mb-ttl" type="button" data-open="${g.id}" title="Open the boss chat for this job"><b>${icon} ${esc(g.title)}</b><small>${esc(when)}</small></button>`
+      : `<button class="mb-ttl" type="button" data-g="${esc(g.key)}"><b>${icon} ${esc(g.title)}</b><small>${esc(when)}</small></button>`;
+    return `<section class="mb-g st-${g.status}" aria-label="${esc(g.title)}"><div class="mb-h">
+      <button class="mb-tog" type="button" data-g="${esc(g.key)}" aria-expanded="${exp}" aria-label="${exp ? 'Hide' : 'Show'} ${g.total} job(s)"${g.total ? '' : ' disabled'}>▶</button>${ttl}
+      ${g.total ? `<span class="mb-prog" aria-hidden="true"><i style="width:${Math.round(g.done / g.total * 100)}%"></i></span>` : ''}<span class="mb-n" title="${esc(useTip)}">${prog}${use.runs ? ` · 🍌 ${HQW.kfmt(use.tokens)}` : ''}</span>
+      <span class="chip ${g.status}">${ST[g.status] || g.status}</span></div>
+      <div class="mb-items"${exp && g.total ? '' : ' hidden'}>${g.items.map((t, i) => card(t, g.kind === 'thread' ? i + 1 : 0)).join('')}</div></section>`;
+  }).join('') || '<div class="empty">Nothing on the board. Give the boss a job with ＋ New job.</div>';
+  if (fkey) $('#mb').querySelector(`[data-g="${CSS.escape(fkey)}"], [data-id="${CSS.escape(fkey)}"], [data-open="${CSS.escape(fkey)}"]`)?.focus();
+}
+$('#mb').addEventListener('click', e => {
+  const b = e.target.closest('[data-g]');
+  if (!b) return;
+  const g = b.dataset.g, cur = $('#mb').querySelector(`.mb-tog[data-g="${CSS.escape(g)}"]`)?.getAttribute('aria-expanded') === 'true';
+  mbOpen.set(g, !cur); renderBoard(true);
+});
+
+function render() {
+  if (labOn) Lab.update(S);
+  renderMeters(); if (!$('#winPop').hidden) renderWindow(); renderNeeds(); renderBoard(); renderWho(); renderAdmin(); renderMemory(); renderSetup(); renderMenu(); renderScores(); renderSchedules(); renderDeliverables();
+  if (panelOpen === 'mr') loadStats();
+}
+
+// ---- guidance board: the boss memory, one note per line, edited in place ----
+let memShown = null;
+const NOTES = ['#fff3a3', '#ffd1dc', '#cdeaff', '#d4f5c9', '#ffe0b3', '#e6dcff'];
+function renderMemory(force) {
+  const m = S.memory || { text: '' }, items = HQW.memoryItems(m.text);
+  $('#memSum').textContent = m.at ? `${items.length} note(s) · changed by ${m.by} ${ago(m.at)}` : 'guidance the boss follows on every job';
+  $('#memUndo').hidden = m.prev === undefined;
+  if (!force && (m.text === memShown || $('#gList').contains(document.activeElement))) return; // keep what you are typing
+  memShown = m.text;
+  $('#gList').innerHTML = items.map((t, i) => `<li style="--note:${NOTES[i % NOTES.length]}"><input value="${esc(t)}" data-gi="${i}" maxlength="500" aria-label="Guidance note ${i + 1}">` +
+    `<button type="button" data-gdel="${i}" aria-label="Take down note ${i + 1}" title="Take it down">×</button></li>`).join('') || '<li class="g-empty" style="background:none;box-shadow:none">No guidance yet.</li>';
+}
+const ago = at => { const s = (Date.now() - at) / 1000; return s < 90 ? 'just now' : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 129600 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`; };
+const noteInputs = () => [...$('#gList').querySelectorAll('input[data-gi]')].map(i => i.value);
+function saveNotes(items, msg) {
+  const text = HQW.memoryText(items);
+  return post('/api/memory', { text }).then(() => { memShown = null; S.memory = { ...S.memory, text }; renderMemory(true); if (msg) toast(msg); }).catch(err => toast(err.message));
+}
+$('#gAdd').addEventListener('submit', e => {
+  e.preventDefault();
+  const t = $('#gNew').value.trim();
+  if (!t) return $('#gNew').focus();
+  saveNotes([...noteInputs(), t], 'Pinned. The boss follows it from its next run.').then(() => { $('#gNew').value = ''; });
+});
+$('#gList').addEventListener('change', e => { if (e.target.matches('input[data-gi]')) saveNotes(noteInputs(), 'Saved.'); });
+$('#gList').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[data-gi]')) { e.preventDefault(); e.target.blur(); } });
+$('#gList').addEventListener('click', e => {
+  const b = e.target.closest('[data-gdel]');
+  if (b) saveNotes(noteInputs().filter((_, i) => i !== Number(b.dataset.gdel)), 'Taken down.');
+});
+$('#memUndo').onclick = () => post('/api/memory', { undo: true }).then(() => { memShown = null; }).catch(err => toast(err.message));
+$('#gList').addEventListener('focusout', () => setTimeout(() => { if (S && !$('#gList').contains(document.activeElement)) renderMemory(); }, 0));
+
+// ---- drawer ----
+function entry(e, t) {
+  if (e.k === 'say') return `<div class="e e-say" style="--tint:${tint(t.nimion)}"><span class="who">${esc(t.nimion)}</span><div class="md">${md(e.t.replace(/```json\s*\[\s*\]\s*```/g, '').trim())}</div></div>`; // the boss's empty plan just means "no crew work"
+  if (e.k === 'you') return `<div class="e e-you md">${md(e.t)}</div>`;
+  if (e.k === 'tool') return `<div class="e e-tool">🔧 ${esc(e.t)}</div>`;
+  return `<div class="e e-${e.k}">${esc(e.t)}${e.sched ? schedActs(e.sched) : ''}</div>`;
+}
+async function loadDetail(scroll) {
+  const seq = ++detailSeq, r = await fetch('/api/tasks/' + openId);
+  if (seq !== detailSeq || !r.ok) return;
+  const t = await r.json(), log = $('#log');
+  const sig = `${t.id}:${t.status}:${t.log.length}:${t.log.at(-1)?.at}:${t.log.filter(e => e.sched).map(e => schedSig(e.sched)).join()}`; // a schedule's buttons follow its state
+  $('#d-id').textContent = `#${t.id} · ${t.nimion}${t.parent ? ` · from boss task #${t.parent}` : ''}`;
+  $('#d-title').textContent = t.title;
+  const kids = S?.tasks.filter(k => k.parent === t.id) || [], own = HQW.sumUsage([t]), all = HQW.sumUsage([t, ...kids]);
+  $('#d-use').textContent = '🍌 ' + (kids.length ? `this thread (${kids.length} step${kids.length > 1 ? 's' : ''} included): ${useText(all)} · the boss: ${useText(own, true)}` : useText(own));
+  $('#d-meta').textContent = [t.status, t.ms && dur(t.ms), t.turns && `${t.turns} turns`, t.branch && `🌿 ${t.branch}`, t.attach?.length && `📎 ${t.attach.length} attached`, t.sessionId && `session ${t.sessionId.slice(0, 8)}`].filter(Boolean).join(' · ');
+  $('#replyText').placeholder = t.status === 'needs-you' ? 'Answer the question. The nimion carries on with it.'
+    : t.status === 'working' ? 'Still working. Your reply is queued and sent when this run ends. Stop sends it now.'
+    : 'Reply to continue this task. The nimion remembers the conversation.';
+  $('#stop').hidden = FINISHED.includes(t.status);
+  if (sig === lastSig && !scroll) return;
+  lastSig = sig;
+  // An open question sits pinned above the reply box, with the nimion's suggested answers.
+  const q = t.status === 'needs-you' && t.question;
+  $('#qbox').hidden = !q;
+  $('#replyBtn').textContent = q ? 'Answer' : 'Reply';
+  if (q) {
+    $('#qbox').style.setProperty('--tint', tint(t.nimion));
+    $('#qbox').innerHTML = `<div class="qb-who">❓ ${esc(t.nimion)} asks</div><div class="q md">${md(t.question)}</div>${opts(t)}
+      <p class="q-own">${t.options?.length ? 'Click an answer, or write your own below.' : 'Write your answer below.'}</p>`;
+    if (scroll) $('#replyText').focus();
+  }
+  const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+  log.innerHTML = t.log.map(e => entry(e, t)).join('') + (t.status === 'working' ? '<div class="typing"><i></i><i></i><i></i></div>' : '');
+  if (atBottom || scroll) log.scrollTop = log.scrollHeight;
+  linkFiles($('#drawer'), t.id);
+}
+function openTask(id) {
+  if (panelOpen) closePanel(true);
+  if (id !== openId) replyAtt.clear();
+  openId = id; lastSig = ''; $('#drawer').hidden = false;
+  setHash('job/' + id);
+  loadDetail(true).then(loadJobs);
+  const t = S && S.tasks.find(x => x.id === id);
+  if (t) Lab.focus('m:' + t.nimion, { side: .22 }); // fly to the nimion, kept left of the drawer
+  else fetch('/api/tasks/' + id).then(r => r.ok ? r.json() : null).then(j => { if (j && openId === id) Lab.focus('m:' + j.nimion, { side: .22 }); });
+}
+// Every job this nimion was given, current and cleared, newest first. The boss lists its own goals, not its crew's steps.
+async function loadJobs() {
+  const id = openId, t = await fetch('/api/tasks/' + id).then(r => r.ok ? r.json() : null);
+  if (!t || id !== openId) return;
+  const jobs = await fetch(`/api/history?nimion=${encodeURIComponent(t.nimion)}&limit=200`).then(r => r.json());
+  if (id !== openId) return;
+  const sel = $('#jobs');
+  sel.hidden = jobs.length < 2;
+  sel.innerHTML = jobs.map(j => `<option value="${j.id}"${j.id === id ? ' selected' : ''}>#${j.id} · ${esc(j.status)}${j.archived ? ' (cleared)' : ''} · ${esc(j.title.slice(0, 70))} · ${new Date(j.created).toLocaleDateString()}</option>`).join('');
+  sel.title = `${jobs.length} jobs for ${t.nimion}`;
+}
+$('#jobs').onchange = e => openTask(Number(e.target.value));
+
+// ---- attachments: picker, drag and drop, paste, or a typed path ----
+const ICON = n => /\.(png|jpe?g|gif|webp|heic|svg)$/i.test(n) ? '🖼️' : /\.pdf$/i.test(n) ? '📄' : /\.(docx?|xlsx?|pptx?|csv|md|txt)$/i.test(n) ? '📝' : '📎';
+function attacher(box, zone) {
+  let items = [];
+  const inflight = new Set();
+  box.innerHTML = `<div class="chips"></div><div class="att-row"><button type="button" class="btn att-pick">📎 Files</button>
+    <input type="file" multiple hidden><input class="att-path" placeholder="or paste a file or folder path, then Enter" aria-label="Attach a file or folder by its path"></div>`;
+  const chips = box.querySelector('.chips'), picker = box.querySelector('input[type=file]'), pathIn = box.querySelector('.att-path');
+  const draw = () => {
+    chips.innerHTML = items.map((a, i) => `<span class="chip-att${a.up ? ' up' : ''}" title="${esc(a.path || 'uploading…')}">${a.up ? '⏳' : a.kind === 'dir' ? '📁' : ICON(a.name)}<span>${esc(a.name)}</span>` +
+      (a.up ? '' : `<button type="button" data-rm="${i}" aria-label="Remove ${esc(a.name)}">×</button>`) + '</span>').join('');
+  };
+  const track = (name, job) => { // show a placeholder chip until the server has the file
+    const slot = { name, up: true };
+    items.push(slot);
+    draw();
+    const p = job.then(a => { items[items.indexOf(slot)] = a; }, e => { items = items.filter(x => x !== slot); toast(`${name}: ${e.message}`); })
+      .finally(() => { inflight.delete(p); draw(); });
+    inflight.add(p);
+  };
+  const upload = f => track(f.name || 'pasted image', fetch('/api/attach', {
+    method: 'POST', headers: { 'content-type': 'application/octet-stream', 'x-filename': encodeURIComponent(f.name || `pasted-${Date.now()}.png`) }, body: f,
+  }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText); return j; }));
+  box.querySelector('.att-pick').onclick = () => picker.click();
+  picker.onchange = () => { [...picker.files].forEach(upload); picker.value = ''; };
+  pathIn.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const p = pathIn.value.trim();
+    if (!p) return;
+    pathIn.value = '';
+    track(p.replace(/\/+$/, '').split('/').pop() || p, post('/api/attach', { path: p }));
+  });
+  chips.addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { items.splice(Number(b.dataset.rm), 1); draw(); } });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag');
+    let folders = 0;
+    for (const it of e.dataTransfer.items) {
+      if (it.kind !== 'file') continue;
+      if (it.webkitGetAsEntry?.()?.isDirectory) folders++; else { const f = it.getAsFile(); if (f) upload(f); }
+    }
+    if (folders) toast('A browser can’t send a folder. Paste its path instead (⌥⌘C in Finder copies it).');
+  });
+  zone.addEventListener('paste', e => { const files = [...(e.clipboardData?.files || [])]; if (files.length) { e.preventDefault(); files.forEach(upload); } });
+  return { ready: () => Promise.all([...inflight]), paths: () => items.filter(a => !a.up).map(a => a.path), clear: () => { items = []; draw(); }, set: list => { items = (list || []).slice(); draw(); } };
+}
+const orderAtt = attacher($('#o-att'), $('#order'));
+const replyAtt = attacher($('#r-att'), $('#reply'));
+function closeDrawer(quiet) {
+  openId = null; $('#drawer').hidden = true;
+  if (!quiet) { setHash(''); Lab.release(); }
+}
+
+// ---- events ----
+const es = new EventSource('/events');
+let routed = false;
+es.onmessage = e => { S = JSON.parse(e.data); render(); if (openId) loadDetail(); if (!routed && labOn) route(); };
+es.onerror = () => { $('#conn').hidden = false; };
+es.onopen = () => { $('#conn').hidden = true; };
+
+$('#order').addEventListener('submit', async e => {
+  e.preventDefault();
+  const prompt = $('#prompt').value.trim();
+  if (!prompt) return $('#prompt').focus();
+  $('#send').disabled = true;
+  try {
+    await orderAtt.ready();
+    const { id } = await post('/api/tasks', { prompt, nimion: $('#who').value, attach: orderAtt.paths() });
+    if (panelOpen) closePanel(true);
+    $('#prompt').value = '';
+    orderAtt.clear();
+    openTask(id);
+  } catch (err) { toast(err.message); }
+  $('#send').disabled = false;
+});
+$('#reply').addEventListener('submit', async e => {
+  e.preventDefault();
+  const prompt = $('#replyText').value.trim();
+  if (!prompt) return;
+  try {
+    await replyAtt.ready();
+    await post(`/api/tasks/${openId}/reply`, { prompt, attach: replyAtt.paths() });
+    $('#replyText').value = '';
+    replyAtt.clear();
+    loadDetail(true);
+  } catch (err) { toast(err.message); }
+});
+for (const [ta, form] of [['#prompt', '#order'], ['#replyText', '#reply']])
+  $(ta).addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $(form).requestSubmit(); });
+$('#stop').onclick = () => post(`/api/tasks/${openId}/stop`).catch(err => toast(err.message));
+$('#close').onclick = () => closeDrawer();
+$('#clear').onclick = () => post('/api/clear').catch(err => toast(err.message));
+document.addEventListener('click', e => {
+  const ab = e.target.closest('[data-aid]');
+  if (ab) { ab.disabled = true; return post(`/api/approvals/${ab.dataset.aid}/decide`, { allow: !!ab.dataset.allow }).catch(err => toast(err.message)); }
+  const pk = e.target.closest('[data-pick]'); // a suggested answer: send it as the reply
+  if (pk) {
+    const id = Number(pk.dataset.pick), answer = S.tasks.find(x => x.id === id)?.options?.[pk.dataset.i];
+    if (!answer) return;
+    document.querySelectorAll(`[data-pick="${id}"]`).forEach(b => { b.disabled = true; });
+    return post(`/api/tasks/${id}/reply`, { prompt: answer.replace(/\*\*/g, '') }).then(() => { if (openId === id) loadDetail(true); })
+      .catch(err => { toast(err.message); document.querySelectorAll(`[data-pick="${id}"]`).forEach(b => { b.disabled = false; }); });
+  }
+  const op = e.target.closest('[data-open]');
+  if (op) { e.preventDefault(); return openTask(Number(op.dataset.open)); }
+  const t = e.target.closest('.task');
+  if (t) return openTask(Number(t.dataset.id));
+  const go = e.target.closest('[data-go]');
+  if (go) { closeMenu(); return go.dataset.go === 'log' ? toggleLog(true) : openPanel(go.dataset.go); }
+  const mn = e.target.closest('[data-nimion]');
+  if (mn) { closeMenu(); return onNimionClick(mn.dataset.nimion); }
+});
+setInterval(() => S && renderMeters(), 60_000); // keep "resets in" fresh
+
+// ---- who gets the task: rebuilt only when the crew changes, keeping your choice ----
+let whoSig = '';
+function renderWho() {
+  const sig = JSON.stringify(S.crew.map(c => [c.name, c.title, c.boss]));
+  if (sig === whoSig) return;
+  whoSig = sig;
+  const cur = $('#who').value;
+  $('#who').innerHTML = S.crew.map(c => `<option value="${esc(c.name)}">${esc(c.name)} — ${c.boss ? 'the boss splits it across the crew' : esc((c.title.split('·')[1] || c.title).trim())}</option>`).join('');
+  if (S.crew.some(c => c.name === cur)) $('#who').value = cur;
+}
+
+// ---- NR office (Nimion Resources) and linked context ----
+let adminSig = '', stats = {}, statsAt = 0;
+const durShort = ms => (ms == null ? '—' : dur(ms));
+function loadStats(force) {
+  if (!force && Date.now() - statsAt < 5000) return;
+  statsAt = Date.now();
+  fetch('/api/crew/stats').then(r => r.json()).then(j => { stats = j; adminSig = ''; renderAdmin(); }).catch(() => {});
+}
+function renderAdmin() {
+  const sig = JSON.stringify([S.crew, S.context, stats]);
+  if (sig === adminSig) return;
+  adminSig = sig;
+  $('#n-ctx').textContent = S.context.length;
+  $('#mrCards').innerHTML = S.crew.map(c => {
+    const st = stats[c.name] || {};
+    return `<article class="mr-card" style="--tint:${tint(c.name)}">${HQW.portrait(c.look, tint(c.name))}
+      <h3>${esc(c.name)}${c.boss ? '<span class="chip">boss</span>' : ''}</h3>
+      <div class="ti">${esc(c.title)}</div>
+      <div class="ti">${c.model ? `model ${esc(c.model)}` : 'default model'} · ${c.allow?.length || 0} tool rule(s)</div>
+      <div class="mr-stats"><span>✅ <b>${st.done ?? 0}</b> done</span><span>⛔ <b>${st.failed ?? 0}</b> failed</span><span>⏱ avg <b>${durShort(st.avgMs)}</b></span><span>📥 load <b>${st.load ?? 0}</b></span></div>
+      <div class="mr-stats" title="Tokens used (in + out, cache included) and time spent. A subscription is not billed per token."><span>🍌 today <b>${useShort(st.usage?.today)}</b></span><span>7 days <b>${useShort(st.usage?.week)}</b></span><span>all <b>${useShort(st.usage?.all)}</b></span></div>
+      <div class="badges">${(c.skills || []).map(k => `<span class="badge" title="Claude Code skill">🧩 ${esc(k)}</span>`).join('') || '<span class="ti">No skills yet</span>'}</div>
+      <div class="crew-btns"><button type="button" class="btn" data-edit="${esc(c.name)}">Edit</button><button type="button" class="btn" data-nimion="${esc(c.name)}">Chat</button>${c.boss ? '' : `<button type="button" class="btn stop" data-remove="${esc(c.name)}">Retire</button>`}</div>
+    </article>`;
+  }).join('') + '<button type="button" class="mr-hire" id="mrHire">＋ Hire a nimion</button>';
+  $('#ctxChips').innerHTML = S.context.map(c => `<span class="chip-att" title="${esc(c.path)}">📁<span>${esc(c.name)}${c.note ? ` — ${esc(c.note)}` : ''}</span>` +
+    `<button type="button" data-unlink="${esc(c.path)}" aria-label="Unlink ${esc(c.name)}">×</button></span>`).join('') || '<span class="muted">Nothing linked yet.</span>';
+}
+
+const cf = $('#crewForm'), field = n => cf.elements.namedItem(n);
+let editing = null, skChosen = [], skAll = null, skProbed = false;
+const setOption = (sel, v) => { if (![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v; };
+function fillProps() {
+  field('prop').innerHTML = Lab.props.map(p => `<option>${esc(p)}</option>`).join('');
+  field('style').innerHTML = HQW.STYLES.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+}
+const formLook = () => ({ eyes: Number(field('eyes').value), prop: field('prop').value, tone: field('tone').value, style: field('style').value });
+const formTint = () => (editing ? tint(editing) : COLORS[S.crew.length % COLORS.length]); // a new hire takes the next colour
+// Colour: a small tested set of swatches; a saved colour outside it still works and shows as "custom".
+function drawSwatches() {
+  const tone = field('tone').value.toLowerCase(), custom = HQW.swatchName(tone) === 'custom';
+  $('#swatches').innerHTML = HQW.SWATCHES.map(([n, hex]) => `<button type="button" class="swb" role="radio" style="--c:${hex}" data-tone="${hex}" aria-checked="${hex === tone}" tabindex="${hex === tone ? 0 : -1}" title="${n}" aria-label="${n}"></button>`).join('') +
+    (custom ? `<button type="button" class="swb custom" role="radio" style="--c:${esc(tone)}" data-tone="${esc(tone)}" aria-checked="true" tabindex="0" title="A colour saved before the swatches: ${esc(tone)}">custom</button>` : '');
+}
+$('#swatches').addEventListener('click', e => { const b = e.target.closest('[data-tone]'); if (b) { field('tone').value = b.dataset.tone; drawPreview(); $(`#swatches [data-tone="${b.dataset.tone}"]`)?.focus(); } });
+$('#swatches').addEventListener('keydown', e => { // arrow keys move through the swatches, like any radio group
+  const all = [...$('#swatches').querySelectorAll('[data-tone]')], i = all.indexOf(document.activeElement), d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!d || i < 0) return;
+  e.preventDefault(); all[(i + d + all.length) % all.length].click();
+});
+function drawPreview() {
+  drawSwatches();
+  $('#cfPrev').innerHTML = HQW.portrait(formLook(), formTint());
+  $('#cfPrevName').textContent = (editing || field('name').value.trim() || 'New nimion');
+}
+function showEditor(on) {
+  cf.hidden = !on; $('#mrList').hidden = on;
+  if (on) { drawPreview(); loadSkills(); }
+}
+function resetCrewForm() { editing = null; cf.reset(); field('name').disabled = false; skChosen = []; $('#cfTitle').textContent = 'Hire a nimion'; showEditor(false); }
+cf.addEventListener('input', e => { if (['eyes', 'prop', 'style', 'tone', 'name'].includes(e.target.name)) drawPreview(); });
+cf.addEventListener('change', e => { if (['eyes', 'prop', 'style'].includes(e.target.name)) drawPreview(); });
+cf.addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = { name: editing || field('name').value, title: field('title').value, role: field('role').value, model: field('model').value,
+    look: formLook(), allow: field('allow').value.split('\n'), skills: skChosen, edit: !!editing };
+  try { await post('/api/crew', body); toast(`${body.name} ${editing ? 'is updated' : 'is hired, and walks in through the NR door'}.`); resetCrewForm(); loadStats(true); } catch (err) { toast(err.message); }
+});
+$('#cfCancel').onclick = resetCrewForm;
+async function editNimion(name) {
+  const c = (await fetch('/api/crew').then(r => r.json())).find(x => x.name === name);
+  if (!c) return;
+  openPanel('mr');
+  editing = c.name;
+  field('name').value = c.name;
+  field('name').disabled = true; // the name is how tasks find their nimion
+  field('title').value = c.title;
+  field('role').value = c.role;
+  setOption(field('model'), c.model || '');
+  field('eyes').value = c.look?.eyes === 1 ? '1' : '2';
+  setOption(field('prop'), c.look?.prop || 'none');
+  field('style').value = HQW.styleOf(c.look);
+  field('tone').value = c.look?.tone || HQW.TONE;
+  field('allow').value = (c.allow || []).join('\n');
+  skChosen = [...(c.skills || [])];
+  $('#cfTitle').textContent = `Edit ${c.name}`;
+  showEditor(true);
+  field('title').focus();
+}
+// Skills: the list a run can load (from the CLI's init event), each with its one-line description.
+async function loadSkills(probe) {
+  $('#skState').textContent = probe ? '· checking what a run loads…' : '';
+  try {
+    skAll = probe ? await post('/api/skills/probe') : await fetch('/api/skills').then(r => r.json());
+    if (!skAll.checked && !skProbed && !probe) { skProbed = true; return loadSkills(true); } // once: a quick run that stops as soon as Claude Code lists its skills
+    $('#skState').textContent = skAll.checked ? `· ${skAll.skills.length} installed · checked ${ago(skAll.checked)}` : `· ${skAll.skills.length} found on disk`;
+  } catch (err) { $('#skState').textContent = '· ' + err.message; skAll ||= { skills: [] }; }
+  drawSkills();
+}
+function drawSkills() {
+  const q = $('#skFind').value.trim().toLowerCase(), all = skAll?.skills || [];
+  const list = all.filter(k => !q || (k.name + ' ' + k.description).toLowerCase().includes(q));
+  const extra = skChosen.filter(n => !all.some(k => k.name === n)).map(n => ({ name: n, description: 'not installed now: a run cannot load it' }));
+  $('#skList').innerHTML = [...extra, ...list].slice(0, 300).map(k => `<label><input type="checkbox" value="${esc(k.name)}"${skChosen.includes(k.name) ? ' checked' : ''}><b>${esc(k.name)}</b>${k.description ? `<small>${esc(k.description)}</small>` : ''}</label>`).join('')
+    || '<span class="muted">No skills match.</span>';
+  $('#skChosen').innerHTML = skChosen.map(n => `<span class="badge">🧩 ${esc(n)}</span>`).join('') || '<span class="muted" style="font-size:13px">None picked: it works from its role alone.</span>';
+}
+$('#skFind').addEventListener('input', drawSkills);
+$('#skList').addEventListener('change', e => {
+  const v = e.target.value;
+  skChosen = e.target.checked ? [...new Set([...skChosen, v])] : skChosen.filter(n => n !== v);
+  drawSkills();
+});
+$('#skProbe').onclick = () => loadSkills(true);
+$('#ctxForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements;
+  try { await post('/api/context', { path: f.namedItem('path').value.trim(), note: f.namedItem('note').value.trim() }); e.target.reset(); } catch (err) { toast(err.message); }
+});
+document.addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]'), rm = e.target.closest('[data-remove]'), ul = e.target.closest('[data-unlink]');
+  if (ed) editNimion(ed.dataset.edit);
+  if (e.target.closest('#mrHire')) { resetCrewForm(); showEditor(true); field('name').focus(); }
+  if (rm && confirm(`Retire ${rm.dataset.remove}? Their finished jobs stay in history.`)) post('/api/crew/remove', { name: rm.dataset.remove }).then(() => toast(`${rm.dataset.remove} retired. 🍌`)).catch(err => toast(err.message));
+  if (ul) post('/api/context/remove', { path: ul.dataset.unlink }).catch(err => toast(err.message));
+});
+
+// ---- files the crew mentions: md.js marks candidates, the server says which exist (inside the crew folder or data home) ----
+const fileSeen = new Map(); // `${task}|${path}` -> absolute path, or null
+const fileUrl = (abs, view) => '/files' + abs.split('/').map(encodeURIComponent).join('/') + (view ? '?view' : '');
+async function linkFiles(root, task) {
+  const spans = [...root.querySelectorAll('.fcand')], ask = [...new Set(spans.map(s => s.dataset.path).filter(p => !fileSeen.has(task + '|' + p)))];
+  if (ask.length) {
+    try { const { found } = await post('/api/files', { task, paths: ask }); for (const p of ask) fileSeen.set(task + '|' + p, found[p] || null); } catch { return; }
+  }
+  for (const s of spans) {
+    const abs = fileSeen.get(task + '|' + s.dataset.path);
+    if (!abs || !s.isConnected) continue;
+    const a = document.createElement('a');
+    a.className = 'flink'; a.href = fileUrl(abs); a.dataset.abs = abs; a.title = abs; a.innerHTML = s.innerHTML;
+    if (s.dataset.path.endsWith('/')) a.dataset.dir = '1';
+    s.replaceWith(a);
+  }
+}
+let fmenuFor = null, fmenuTimer = 0;
+const fmenu = $('#fmenu');
+function showFmenu(a) {
+  clearTimeout(fmenuTimer); fmenuFor = a.dataset.abs;
+  fmenu.querySelector('[data-how=browser]').hidden = !!a.dataset.dir;
+  const r = a.getBoundingClientRect(); fmenu.hidden = false;
+  fmenu.style.left = Math.max(8, Math.min(innerWidth - fmenu.offsetWidth - 8, r.left)) + 'px';
+  fmenu.style.top = (r.bottom + 4 + fmenu.offsetHeight > innerHeight ? r.top - fmenu.offsetHeight - 4 : r.bottom + 4) + 'px';
+}
+const hideFmenu = (ms = 250) => { clearTimeout(fmenuTimer); fmenuTimer = setTimeout(() => { fmenu.hidden = true; }, ms); };
+document.addEventListener('mouseover', e => { const a = e.target.closest?.('a.flink'); if (a) showFmenu(a); else if (e.target.closest?.('#fmenu')) clearTimeout(fmenuTimer); });
+document.addEventListener('mouseout', e => { if (e.target.closest?.('a.flink, #fmenu')) hideFmenu(); });
+document.addEventListener('focusin', e => { const a = e.target.closest?.('a.flink'); if (a) showFmenu(a); });
+function openFile(abs, how) {
+  if (how === 'browser') return window.open(fileUrl(abs, /\.(md|markdown)$/i.test(abs)), '_blank', 'noopener'); // the app opens this in your default browser
+  post('/api/open', { path: abs, how }).then(() => toast(how === 'finder' ? 'Shown in Finder' : 'Opened in VS Code')).catch(err => toast(err.message));
+}
+fmenu.addEventListener('click', e => { const b = e.target.closest('[data-how]'); if (b && fmenuFor) { openFile(fmenuFor, b.dataset.how); fmenu.hidden = true; } });
+// A plain click previews the file here: markdown rendered, pages and images in a sandboxed frame, text as text.
+document.addEventListener('click', async e => {
+  const a = e.target.closest?.('a.flink');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault(); fmenu.hidden = true;
+  if (a.dataset.dir) return openFile(a.dataset.abs, 'finder');
+  const abs = a.dataset.abs, name = abs.split('/').pop(), body = $('#fpBody'), dlg = $('#fprev');
+  dlg.dataset.abs = abs; $('#fpName').textContent = abs; body.className = 'fp-body'; body.innerHTML = '<p class="muted">Loading…</p>';
+  if (!dlg.open) dlg.showModal();
+  if (/\.(html?|pdf|png|jpe?g|gif|webp|svg)$/i.test(name)) { body.classList.add('frame'); body.innerHTML = `<iframe ${/\.(html?|svg)$/i.test(name) ? 'sandbox="allow-scripts"' : ''} src="${esc(fileUrl(abs))}" title="${esc(name)}"></iframe>`; return; }
+  const r = await fetch(fileUrl(abs));
+  const txt = r.ok ? await r.text() : '';
+  if (!r.ok) body.innerHTML = '<p>That file is gone.</p>';
+  else if (/\.(md|markdown)$/i.test(name)) { body.innerHTML = `<div class="md">${md(txt)}</div>`; linkFiles(body, openId); }
+  else if (/^(text\/|application\/json)/.test(r.headers.get('content-type') || '')) body.innerHTML = `<pre>${esc(txt.slice(0, 400000))}</pre>`;
+  else body.innerHTML = `<p>No preview for this kind of file. Open it with one of the buttons above.</p>`;
+});
+$('#fprev').addEventListener('click', e => { const b = e.target.closest('[data-how]'); if (b) openFile($('#fprev').dataset.abs, b.dataset.how); if (e.target === $('#fprev')) $('#fprev').close(); });
+$('#fpClose').onclick = () => $('#fprev').close();
+
+// ---- deliverables shelf: every file the crew made (paths only), with the same preview, open menu and path guard as file links ----
+let dlList = [], dlSig = '';
+const KIND_WORD = { wrote: 'written', edited: 'edited', mentioned: 'named in a reply' };
+async function loadDeliverables() {
+  try { dlList = await fetch('/api/deliverables').then(r => r.json()); } catch { return; }
+  const opt = (sel, all, vals) => { const cur = $(sel).value; $(sel).innerHTML = `<option value="">${all}</option>` + vals.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join(''); if (vals.some(([v]) => String(v) === cur)) $(sel).value = cur; };
+  const hits = dlList.flatMap(f => f.by);
+  opt('#dlNimion', 'Every nimion', [...new Set(hits.map(h => h.nimion))].sort().map(m => [m, m]));
+  opt('#dlJob', 'Every job', [...new Map(hits.map(h => [h.thread, `#${h.thread} ${h.threadTitle}`.slice(0, 70)]))]);
+  opt('#dlType', 'Every type', [...new Set(dlList.map(f => f.ext || 'other'))].sort().map(x => [x, x === 'other' ? 'no extension' : '.' + x]));
+  drawDeliverables();
+}
+function drawDeliverables() {
+  const q = $('#dlQ').value.trim().toLowerCase(), m = $('#dlNimion').value, j = $('#dlJob').value, x = $('#dlType').value;
+  const rows = dlList.filter(f => (!m || f.by.some(h => h.nimion === m)) && (!j || f.by.some(h => String(h.thread) === j)) && (!x || (f.ext || 'other') === x) &&
+    (!q || `${f.name} ${f.path} ${f.by.map(h => h.title + ' ' + h.threadTitle).join(' ')}`.toLowerCase().includes(q)));
+  const gone = dlList.filter(f => !f.exists).length;
+  $('#dlSum').textContent = dlList.length ? `${dlList.length} file(s)${gone ? ` · ${gone} no longer there` : ''} · only paths are kept, never copies` : 'every file the crew made · only paths are kept, never copies';
+  $('#dlList').innerHTML = rows.map(f => `<tr>
+    <td>${f.exists ? `<a class="flink" href="${esc(fileUrl(f.path))}" data-abs="${esc(f.path)}" title="${esc(f.path)}">${esc(f.name)}</a>` : `<span class="gone" title="${esc(f.path)}">${esc(f.name)}</span> <span class="gone-tag">no longer there</span>`}
+      <small>${esc(f.path)}</small></td>
+    <td><button type="button" class="lnk" data-open="${f.task}">#${f.task}</button> ${esc(f.title.slice(0, 80))}${f.thread !== f.task ? `<small>in #${f.thread} ${esc(f.threadTitle.slice(0, 60))}</small>` : ''}${f.by.length > 1 ? `<small>also named in ${f.by.slice(1).map(h => `<button type="button" class="lnk" data-open="${h.task}">#${h.task}</button>`).join(', ')}</small>` : ''}</td>
+    <td><span class="mn" style="--tint:${tint(f.nimion)}"><i></i>${esc(f.nimion)}</span></td>
+    <td>${ago(f.at)}<small>${KIND_WORD[f.kind] || f.kind}</small></td><td>${esc(f.ext ? '.' + f.ext : '—')}</td></tr>`).join('')
+    || `<tr><td colspan="5" class="muted">${dlList.length ? 'No file matches.' : 'No files yet. Files the crew writes, and files the boss lists in its final report, show up here.'}</td></tr>`;
+}
+for (const id of ['#dlQ', '#dlNimion', '#dlJob', '#dlType']) $(id).addEventListener('input', drawDeliverables);
+function renderDeliverables() { // keeps the room's cabinet count and an open shelf up to date
+  if (S.deliverables === dlSig) return;
+  dlSig = S.deliverables;
+  if (labOn) Lab.deliverables(S.deliverables || 0);
+  if (panelOpen === 'files') loadDeliverables();
+}
+
+// ---- arcade: small games while the crew works; scores go to the server ----
+const GAME_IDS = Object.keys(Games);
+const MODE_NAME = { '1p': '1 player', '2p': '2 players', coop: 'Co-op' };
+let game = 'catch', mode = '1p', stopGame = null;
+$('#arTabs').innerHTML = GAME_IDS.map(id => `<button type="button" class="btn" role="tab" data-game="${id}">${esc(Games[id].title)}</button>`).join('');
+function pickGame(id) {
+  if (stopGame) { stopGame(); stopGame = null; }
+  game = id;
+  $('#arTabs').querySelectorAll('[data-game]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.game === id)));
+  const modes = Games[id].modes || ['1p'];
+  if (!modes.includes(mode)) mode = modes[0];
+  $('#arModes').innerHTML = modes.length > 1 ? modes.map(m => `<button type="button" class="btn" role="radio" data-mode="${m}" aria-checked="${m === mode}">${MODE_NAME[m] || m}</button>`).join('') : '';
+  $('#arHelp').textContent = Games[id].help;
+  const x = $('#arCanvas').getContext('2d'); x.fillStyle = '#1c2340'; x.fillRect(0, 0, 480, 360);
+  x.fillStyle = '#ffd84d'; x.font = '800 30px ui-rounded, system-ui'; x.textAlign = 'center'; x.fillText(Games[id].title, 240, 170);
+  x.font = '600 16px ui-rounded, system-ui'; x.fillStyle = '#cfe9ff'; x.fillText('Press ▶ Play', 240, 205);
+  renderScores(true);
+}
+function renderScores() {
+  const list = S?.games?.[game] || [];
+  $('#arScores').innerHTML = list.map(g => `<li><b>${g.score}</b> <span class="muted">${new Date(g.at).toLocaleDateString()}</span></li>`).join('') || '<li class="muted">No scores yet</li>';
+}
+$('#arTabs').addEventListener('click', e => { const b = e.target.closest('[data-game]'); if (b) pickGame(b.dataset.game); });
+$('#arModes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) { mode = b.dataset.mode; pickGame(game); } });
+$('#arStart').onclick = () => {
+  if (stopGame) stopGame();
+  const id = game;
+  $('#arCanvas').focus?.();
+  stopGame = Games[id].start($('#arCanvas'), (score, note) => {
+    stopGame = null;
+    const best = (S?.games?.[id] || [])[0]?.score, pre = note ? note + ' · ' : '';
+    const win = /wins/i.test(note || '') || (score > 0 && (best === undefined || score > best)); // a new best, or someone won a 2-player game
+    Lab.react(win ? 'win' : 'lose');
+    post('/api/games', { game: id, score }).then(() => toast(pre + (score > 0 && (best === undefined || score > best) ? `New high score: ${score}! 🎉` : `Score: ${score}`))).catch(err => toast(err.message));
+  }, { mode });
+};
+pickGame('catch');
+
+// ---- schedules: jobs that run later or on a repeat. The server owns the timer; this page only shows and edits. ----
+const fmtWhen = ms => new Date(ms).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const dueIn = ms => (ms - Date.now() < 1000 ? 'due now' : 'in ' + dur(ms - Date.now()));
+const OPEN_ST = ['queued', 'working', 'needs-you'];
+function schedState(s) { // [chip class, chip text]
+  const run = S.tasks.find(t => t.schedule === s.id && OPEN_ST.includes(t.status)) || S.tasks.find(t => t.schedule === s.id && S.tasks.some(k => k.parent === t.id && OPEN_ST.includes(k.status)));
+  if (run) return run.status === 'queued' && !run.started && S.sched?.held ? ['held', 'waiting'] : ['running', run.status === 'needs-you' ? `needs you · #${run.id}` : `running · #${run.id}`];
+  return s.paused ? ['paused', 'paused'] : ['active', 'active'];
+}
+const schedSig = id => { const s = S?.schedules?.find(x => x.id === id); return s ? `${s.id}${s.paused}${!!s.undo}` : 'gone'; };
+function schedActs(id) {
+  const s = S?.schedules?.find(x => x.id === id);
+  if (!s) return '';
+  return `<span class="s-acts">${s.paused ? `<button class="btn" type="button" data-sact="resume" data-sid="${s.id}">▶ Resume</button>` : `<button class="btn" type="button" data-sact="pause" data-sid="${s.id}">⏸ Pause</button>`}` +
+    `<button class="btn" type="button" data-sact="edit" data-sid="${s.id}">✏️ Edit</button>${s.undo ? `<button class="btn" type="button" data-sact="undo" data-sid="${s.id}">↩ Undo</button>` : ''}<button class="btn" type="button" data-go="schedules">⏰ Schedules</button></span>`;
+}
+let schedShown = '', schedSeen = null, runSeen = null;
+// Tell the human when a scheduled run starts (a toast) and when it finishes, fails or needs them (a toast, and a system
+// notification while this page is in the background). Runs come from each schedule's history; a boss run finishes with its crew.
+const canNotify = () => 'Notification' in window && Notification.permission === 'granted';
+function notifyRuns(list) {
+  const now = new Map(list.flatMap(s => (s.history || []).filter(h => h.task).map(h => [h.task, [s, h]])));
+  if (runSeen) for (const [id, [s, h]] of now) {
+    const was = runSeen.get(id);
+    if (was === h.status) continue;
+    if (was === undefined) { toast(`⏰ ${s.name} started (job #${id}, ${s.nimion})`); continue; }
+    const say = { done: 'finished', failed: 'failed', stopped: 'was stopped', 'needs-you': 'needs you' }[h.status];
+    if (!say) continue;
+    const head = `⏰ ${s.name} ${say}`, line = String(S.tasks.find(t => t.id === id)?.last?.t || '').replace(/[#*`>_]/g, '').split('\n').map(l => l.trim()).find(Boolean) || '';
+    const body = `${s.nimion}${h.ms ? `, ${dur(h.ms)}` : ''}${line ? `: ${line.slice(0, 140)}` : ''}`;
+    toast(`${head} · ${body}`);
+    if (document.hidden && canNotify()) {
+      const n = new Notification(head, { body, tag: `hq-run-${id}` });
+      n.onclick = () => { window.focus(); openTask(id); n.close(); };
+    }
+  }
+  runSeen = new Map([...now].map(([id, [, h]]) => [id, h.status]));
+}
+$('#schedBell').onclick = () => Notification.requestPermission().then(p => { toast(p === 'granted' ? '🔔 Notifications are on for scheduled runs.' : 'Notifications stay off. Your browser settings can change this.'); renderSchedules(); });
+function renderSchedules() {
+  const list = S.schedules || [], sched = S.sched || {};
+  notifyRuns(list);
+  $('#schedBell').hidden = !('Notification' in window) || Notification.permission !== 'default' || !list.length;
+  // tell the human about runs that were missed (the Mac slept, or Nimion HQ was off)
+  const keys = list.flatMap(s => (s.history || []).map(h => [`${s.id}:${h.at}`, s, h]));
+  if (schedSeen) for (const [k, s, h] of keys) if (!schedSeen.has(k) && h.status === 'missed') toast(`⏰ "${s.name}": ${h.why}`);
+  schedSeen = new Set(keys.map(k => k[0]));
+  const next = list.filter(s => s.nextAt).sort((a, b) => a.nextAt - b.nextAt)[0];
+  $('#schedSum').innerHTML = list.length ? `${list.length} schedule(s)${next ? ` · next: ${esc(next.name)} <span class="s-count" data-next="${next.nextAt}">${dueIn(next.nextAt)}</span>` : ''}` : 'jobs that run later or on a repeat';
+  $('#schedHeld').hidden = !sched.held;
+  $('#schedHeld').textContent = sched.held ? `⏸ Scheduled runs are waiting: ${sched.held}. They start when the window resets. Your own jobs still run up to ${Math.round((S.maxUtil || .9) * 100)}%.` : '';
+  $('#schedWhere').textContent = `These schedules belong to this Nimion HQ server (the background service runs it while you are logged in). Times are in ${sched.tz || 'your time zone'}.`;
+  const sig = JSON.stringify([list, sched.held, S.tasks.filter(t => t.schedule).map(t => [t.id, t.status, t.started])]);
+  if (sig === schedShown) return;
+  schedShown = sig;
+  const open = new Set([...$('#schedList').querySelectorAll('details[open]')].map(d => d.dataset.hid));
+  const focused = document.activeElement?.matches?.('#schedList .sched') && document.activeElement.dataset.sid; // keep the row in focus across a redraw
+  $('#schedList').innerHTML = list.slice().sort((a, b) => (a.nextAt || Infinity) - (b.nextAt || Infinity)).map(s => {
+    const [cls, label] = schedState(s), hist = (s.history || []).slice().reverse(), last = hist[0];
+    const runLink = h => (h.task ? `<a href="#job/${h.task}" data-open="${h.task}">#${h.task}</a> ${esc(h.status)}${h.ms ? ` · ${dur(h.ms)}` : ''}` : esc(h.status));
+    return `<li class="sched" style="--tint:${tint(s.nimion)}" data-sid="${s.id}" tabindex="0" aria-label="${esc(s.name)}, ${esc(label)}">
+      <div class="s-top"><b>${esc(s.name)}</b><span class="muted">· ${esc(s.nimion)}</span><span class="chip ${cls}">${esc(label)}</span></div>
+      <div class="s-when">${s.cron ? `<span title="cron ${esc(s.cron)}">🔁 ${esc(HQW.describeCron(s.cron))}</span>` : s.once ? `once · ${fmtWhen(s.once)}` : 'once'}${s.attach?.length ? ` · 📎 ${s.attach.length}` : ''}${s.nextAt ? ` · ${s.cron ? `next ${fmtWhen(s.nextAt)} · ` : ''}<span class="s-count" data-next="${s.nextAt}">${dueIn(s.nextAt)}</span>` : ''}${s.paused && s.pausedWhy ? ` · ${esc(s.pausedWhy)}` : ''}${cls === 'held' ? ` · ${esc(sched.held)}` : ''}</div>
+      <div class="s-last">${last ? `last: ${runLink(last)}${last.why ? ` · ${esc(last.why)}` : ''}` : 'not run yet'} · ${s.runs || 0} run(s)${s.maxRuns ? ` of ${s.maxRuns}` : ''} · made by ${esc(s.by || 'you')}</div>
+      <div class="s-btns"><button class="btn" type="button" data-sact="run">▶ Run now</button>${s.paused ? '<button class="btn" type="button" data-sact="resume">▶ Resume</button>' : '<button class="btn" type="button" data-sact="pause">⏸ Pause</button>'}<button class="btn" type="button" data-sact="edit">✏️ Edit</button><button class="btn stop" type="button" data-sact="delete">🗑 Delete</button>${s.undo && s.undo !== 'add' ? '<button class="btn" type="button" data-sact="undo">↩ Undo last change</button>' : ''}</div>
+      ${hist.length ? `<details data-hid="${s.id}"${open.has(String(s.id)) ? ' open' : ''}><summary>Runs (${hist.length})</summary><ol>${hist.map(h => `<li>${fmtWhen(h.slot)} · ${runLink(h)}${h.why ? ` · ${esc(h.why)}` : ''}</li>`).join('')}</ol></details>` : ''}
+    </li>`;
+  }).join('') || '<li class="s-empty">Nothing scheduled. Ask the boss in chat ("every weekday at 9, …"), or press ＋ New schedule.</li>';
+  if (focused) $('#schedList').querySelector(`.sched[data-sid="${focused}"]`)?.focus({ preventScroll: true });
+}
+// In the list: ↑ and ↓ move between schedules; Space on a schedule (not on one of its buttons) pauses or resumes it.
+$('#schedList').addEventListener('keydown', e => {
+  const li = e.target.closest('.sched'), rows = [...$('#schedList').querySelectorAll('.sched')];
+  if (!li || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); rows[(rows.indexOf(li) + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length].focus(); }
+  else if (e.key === ' ' && e.target === li) { e.preventDefault(); li.querySelector('[data-sact=pause], [data-sact=resume]')?.click(); }
+});
+setInterval(() => { if (panelOpen === 'schedules') document.querySelectorAll('[data-next]').forEach(el => { el.textContent = dueIn(Number(el.dataset.next)); }); }, 1000);
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-sact]');
+  if (!b) return;
+  const id = Number(b.dataset.sid || b.closest('[data-sid]')?.dataset.sid), act = b.dataset.sact, s = S.schedules.find(x => x.id === id);
+  if (act === 'edit') return editSchedule(id);
+  if (act === 'delete' && !confirm(`Delete "${s?.name}"? Its past jobs stay in history, and you can undo it.`)) return;
+  post(`/api/schedules/${id}/${act}`).then(r => toast('⏰ ' + r.msg)).catch(err => toast(err.message));
+});
+// The editor: repeat presets (or a custom cron rule), once at a time, or once after a while; a live preview of the next runs.
+const sf = $('#schedForm'), schedAtt = attacher($('#s-att'), sf);
+let schedEditing = null, previewTm = null;
+const localInput = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+const ONCE = { at: ['Date and time', 'datetime-local'], in: ['After how long, such as 20m, 2h or 1d', 'text'] };
+const presetOf = () => ({ kind: sf.preset.value, time: sf.time.value, every: sf.every.value, dom: sf.dom.value, cron: sf.cron.value,
+  days: [...sf.querySelectorAll('[name=day]:checked')].map(c => Number(c.value)) });
+const whenBody = () => (sf.kind.value === 'cron' ? { cron: HQW.cronFromPreset(presetOf()) } : { [sf.kind.value]: sf.when.value });
+function showWhen() {
+  const rep = sf.kind.value === 'cron';
+  $('#schedRepeat').hidden = !rep; $('#schedOnce').hidden = rep;
+  sf.querySelectorAll('[data-p]').forEach(el => { el.hidden = !rep || !el.dataset.p.split(' ').includes(sf.preset.value); });
+  if (!rep) { $('#schedWhenL').textContent = ONCE[sf.kind.value][0]; sf.when.type = ONCE[sf.kind.value][1]; }
+}
+function setPreset(cron) {
+  let p = HQW.presetFromCron(cron);
+  if (p.kind === 'hours' && ![...sf.every.options].some(o => Number(o.value) === p.every)) p = { kind: 'cron', cron };
+  sf.preset.value = p.kind; sf.cron.value = cron;
+  if (p.time) sf.time.value = p.time;
+  if (p.every) sf.every.value = String(p.every);
+  if (p.dom) sf.dom.value = p.dom;
+  sf.querySelectorAll('[name=day]').forEach(c => { c.checked = (p.days || [1, 2, 3, 4, 5]).includes(Number(c.value)); });
+}
+function setKind() {
+  if (sf.kind.value === 'at') sf.when.value = localInput(Math.ceil(Date.now() / 3600_000) * 3600_000 + 3600_000);
+  if (sf.kind.value === 'in') sf.when.value = '2h';
+  showWhen(); previewWhen();
+}
+function previewWhen() {
+  clearTimeout(previewTm);
+  previewTm = setTimeout(() => {
+    const p = $('#schedPreview');
+    let body;
+    try { body = whenBody(); } catch (err) { p.className = 'note err'; p.textContent = err.message; return; }
+    if (!Object.values(body)[0]?.trim()) { p.textContent = ''; return; }
+    post('/api/schedules/preview', { ...body, n: 5 })
+      .then(r => { p.className = 'note'; p.textContent = `${r.words ? `🔁 ${r.words}. ` : ''}${r.times.length > 1 ? 'Next runs' : 'Runs'}: ${r.times.map(fmtWhen).join(' · ')} (${r.tz})`; })
+      .catch(err => { p.className = 'note err'; p.textContent = err.message; });
+  }, 250);
+}
+function editSchedule(id) {
+  if (panelOpen !== 'schedules') openPanel('schedules');
+  const s = id ? S.schedules.find(x => x.id === id) : null;
+  schedEditing = s ? s.id : null;
+  $('#schedWho').innerHTML = S.crew.map(c => `<option value="${esc(c.name)}">${esc(c.name)} · ${c.boss ? 'boss: plans and hands out the work' : esc((c.title.split('·')[0] || '').trim())}</option>`).join('');
+  sf.nimion.value = s?.nimion || S.crew.find(c => c.boss)?.name || S.crew[0]?.name;
+  sf.name.value = s?.name || ''; sf.prompt.value = s?.prompt || '';
+  sf.kind.value = s && !s.cron ? 'at' : 'cron';
+  setPreset(s?.cron || '0 9 * * 1-5');
+  sf.when.value = s?.once ? localInput(s.once) : '';
+  showWhen();
+  schedAtt.set(s?.attach);
+  for (const k of ['overlap', 'catchUp', 'atLimit']) sf[k].value = s?.[k] || sf[k].options[0].value;
+  sf.maxRuns.value = s?.maxRuns || ''; sf.carry.value = s?.carry === false ? '0' : '1';
+  $('#schedFormTitle').textContent = s ? `Edit #${s.id} · ${s.name}` : 'New schedule';
+  sf.hidden = false; $('#schedList').hidden = true; $('#schedNew').hidden = true;
+  previewWhen();
+  sf.prompt.focus();
+}
+function closeSchedForm() { sf.hidden = true; $('#schedList').hidden = false; $('#schedNew').hidden = false; schedEditing = null; schedAtt.clear(); }
+$('#schedNew').onclick = () => editSchedule(null);
+$('#schedCancel').onclick = closeSchedForm;
+sf.kind.onchange = setKind;
+sf.addEventListener('change', e => { if (e.target.name === 'preset' && e.target.value === 'cron' && !sf.cron.value.trim()) sf.cron.value = '0 9 * * 1-5'; showWhen(); previewWhen(); });
+sf.addEventListener('input', e => { if (!['prompt', 'name'].includes(e.target.name)) previewWhen(); });
+sf.prompt.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sf.requestSubmit(); });
+sf.addEventListener('submit', async e => {
+  e.preventDefault();
+  const fail = err => { $('#schedPreview').className = 'note err'; $('#schedPreview').textContent = err.message; };
+  let when;
+  try { when = whenBody(); } catch (err) { return fail(err); }
+  await schedAtt.ready();
+  const body = { ...(schedEditing && { id: schedEditing }), nimion: sf.nimion.value, name: sf.name.value, prompt: sf.prompt.value, ...when, attach: schedAtt.paths(),
+    overlap: sf.overlap.value, catchUp: sf.catchUp.value, atLimit: sf.atLimit.value, maxRuns: sf.maxRuns.value ? Number(sf.maxRuns.value) : null, carry: sf.carry.value === '1' };
+  post('/api/schedules', body).then(r => { toast('⏰ ' + r.msg); closeSchedForm(); }).catch(fail);
+});
+
+// ---- panels: popups over the room, the room menu, deep links ----
+const PANELS = { compose: ['📨', 'New job'], needs: ['✋', 'Needs you'], board: ['📋', 'Mission board'], guidance: ['📌', 'Guidance board'],
+  mr: ['🚪', 'NR office · Nimion Resources'], files: ['🗄️', 'Deliverables'], arcade: ['🕹️', 'Arcade'], context: ['📚', 'Linked context'], schedules: ['⏰', 'Schedules'], log: ['📜', 'Live log'] };
+let panelOpen = null, opener = null;
+const setHash = h => history.replaceState(null, '', h ? '#' + h : location.pathname + location.search);
+function openPanel(name) {
+  if (name === 'log') return toggleLog(true, true);
+  const el = document.querySelector(`[data-panel="${name}"]`);
+  if (!el) return;
+  if (openId) closeDrawer(true);
+  if (panelOpen && panelOpen !== name) closePanel(true);
+  if (panelOpen !== name) opener = document.activeElement;
+  panelOpen = name;
+  el.classList.add('open');
+  $('#scrim').hidden = false;
+  setHash(name);
+  Lab.focus(name, { side: !el.classList.contains('wide') && innerWidth >= 1100 ? .42 : 0 }); // keep the object beside a narrow popup
+  if (name === 'mr') { loadStats(true); if (!editing) showEditor(false); }
+  if (name === 'files') loadDeliverables();
+  if (name === 'schedules' && !sf.hidden && !sf.contains(document.activeElement)) closeSchedForm();
+  if (name === 'arcade') Lab.arcade(true);
+  (el.querySelector('textarea, input:not([type=hidden]):not([disabled])') || el.querySelector('.p-x'))?.focus({ preventScroll: true });
+}
+function closePanel(quiet) {
+  if (!panelOpen) return;
+  const name = panelOpen, el = document.querySelector(`[data-panel="${name}"]`);
+  el.classList.remove('open');
+  panelOpen = null;
+  $('#scrim').hidden = true;
+  if (name === 'arcade') { if (stopGame) { stopGame(); stopGame = null; } Lab.arcade(false); }
+  if (!quiet) { setHash(''); Lab.release(); opener?.focus?.({ preventScroll: true }); }
+}
+document.querySelectorAll('.p-x').forEach(b => { b.onclick = () => closePanel(); });
+$('#scrim').onclick = () => closePanel();
+let menuSig = '';
+function renderMenu() {
+  const sig = JSON.stringify(S.crew.map(c => [c.name, c.title]));
+  if (sig === menuSig) return;
+  menuSig = sig;
+  $('#menu').innerHTML = '<h4>In the room</h4>' + Object.entries(PANELS).map(([id, [ic, label]]) => `<button type="button" data-go="${id}">${ic} ${esc(label)}</button>`).join('') +
+    '<h4>The crew</h4>' + S.crew.map(c => `<button type="button" data-nimion="${esc(c.name)}" style="--tint:${tint(c.name)}"><i></i>${esc(c.name)}<small>${c.boss ? 'boss' : esc((c.title.split('·')[0] || '').trim())}</small></button>`).join('');
+}
+function closeMenu() { if ($('#menu').hidden) return; $('#menu').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); }
+$('#menuBtn').onclick = e => {
+  e.stopPropagation();
+  const open = $('#menu').hidden;
+  $('#menu').hidden = !open; $('#menuBtn').setAttribute('aria-expanded', String(open));
+  if (open) $('#menu').querySelector('button')?.focus();
+};
+document.addEventListener('pointerdown', e => { if (!$('#menu').hidden && !e.target.closest('#menu, #menuBtn')) closeMenu(); });
+function route() {
+  routed = true;
+  const r = HQW.parseHash(location.hash, Object.keys(PANELS));
+  if (r?.job) openTask(r.job); else if (r?.panel) openPanel(r.panel);
+}
+addEventListener('hashchange', route);
+// Esc closes the topmost thing: the menu, the chat, a popup, then the live log.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+  if (!$('#winPop').hidden) { toggleWindow(false); $('#winBtn')?.focus(); }
+  else if (!$('#menu').hidden) { closeMenu(); $('#menuBtn').focus(); }
+  else if (openId) closeDrawer();
+  else if (panelOpen) closePanel();
+  else if (!$('#logpanel').hidden) toggleLog(false);
+});
+
+// The time in the top bar, beside the wall clock in the room (your local time zone).
+function tickClock() {
+  const d = new Date(), el = $('#hudClock');
+  el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  el.dateTime = d.toISOString(); el.title = d.toLocaleString([], { dateStyle: 'full', timeStyle: 'long' });
+}
+tickClock(); setInterval(tickClock, 1000);
+
+// Dark mode: follows the system until you pick one; the pick is saved in this browser. The 3D room follows the CSS colours.
+const sysDark = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => (document.documentElement.dataset.theme || (sysDark.matches ? 'dark' : 'light')) === 'dark';
+function showTheme() { const d = isDark(), b = $('#themeBtn'); b.textContent = d ? '☀️' : '🌙'; b.title = d ? 'Light mode (D)' : 'Dark mode (D)'; b.setAttribute('aria-label', d ? 'Light mode' : 'Dark mode'); b.setAttribute('aria-pressed', String(d)); }
+function toggleTheme() {
+  const t = isDark() ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('hq-theme', t); } catch { /* private window: works until reload */ }
+  showTheme();
+}
+$('#themeBtn').onclick = toggleTheme; sysDark.addEventListener('change', showTheme); showTheme();
+
+// Full screen: the button or F (the browser's own Esc leaves it). The icon and label follow the real state.
+const FS_ICON = {
+  enter: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  leave: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>' };
+let isFull = false;
+function showFull(on) {
+  isFull = !!on;
+  const b = $('#fullBtn'); b.innerHTML = FS_ICON[isFull ? 'leave' : 'enter'];
+  b.title = isFull ? 'Leave full screen (F or Esc)' : 'Full screen (F)'; b.setAttribute('aria-label', isFull ? 'Leave full screen' : 'Full screen'); b.setAttribute('aria-pressed', String(isFull));
+}
+function setFull(on = !isFull) {
+  if (on && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  else if (!on && document.fullscreenElement) document.exitFullscreen();
+}
+const toggleFull = () => setFull(!isFull);
+document.addEventListener('fullscreenchange', () => showFull(!!document.fullscreenElement));
+showFull(false);
+$('#fullBtn').onclick = toggleFull;
+if (!document.fullscreenEnabled) $('#fullBtn').hidden = true;
+
+// ---- keyboard shortcuts: single keys; never while typing, in a dialog, or with the arcade open (the games use the keys) ----
+function bossChat() {
+  const boss = S?.crew.find(c => c.boss)?.name, last = S?.tasks.filter(t => t.nimion === boss).at(-1);
+  if (last) return openTask(last.id);
+  openPanel('compose'); if (boss) $('#who').value = boss;
+}
+function cycleNimion(step) {
+  const names = S?.crew.map(c => c.name) || [];
+  if (!names.length) return;
+  const cur = S.tasks.find(t => t.id === openId)?.nimion, name = names[(names.indexOf(cur) + step + names.length) % names.length] || names[0];
+  const last = S.tasks.filter(t => t.nimion === name).at(-1);
+  if (last) openTask(last.id);
+  else { if (openId) closeDrawer(); Lab.focus('m:' + name); toast(`${name} has no jobs yet.`); }
+}
+const KEYS = [
+  ['N', 'New job (in Schedules: a new schedule)', () => (panelOpen === 'schedules' ? editSchedule(null) : openPanel('compose'))],
+  ['B', 'Boss chat (the latest boss job)', bossChat],
+  ['[ ]', 'Previous / next nimion\u2019s chat', null],
+  ['Q', 'Questions waiting for you', () => openPanel('needs')],
+  ['J', 'Mission board (jobs)', () => openPanel('board')],
+  ['G', 'Guidance board', () => openPanel('guidance')],
+  ['S', 'Schedules', () => openPanel('schedules')],
+  ['O', 'Deliverables (outputs)', () => openPanel('files')],
+  ['M', 'NR office', () => openPanel('mr')],
+  ['A', 'Arcade', () => openPanel('arcade')],
+  ['L', 'Live log', () => toggleLog()],
+  ['F', 'Full screen', () => toggleFull()],
+  ['D', 'Dark / light mode', () => toggleTheme()],
+  ['?', 'This list', () => showKeys()],
+];
+const ACT = Object.fromEntries(KEYS.filter(k => k[2]).map(k => [k[0].toLowerCase(), k[2]]));
+ACT['['] = () => cycleNimion(-1); ACT[']'] = () => cycleNimion(1);
+$('#keysList').innerHTML = KEYS.map(([k, what]) => `<tr><td>${k.split(' ').map(x => `<kbd>${esc(x)}</kbd>`).join(' ')}</td><td>${esc(what)}</td></tr>`).join('') +
+  '<tr><td><kbd>⌘</kbd> <kbd>K</kbd></td><td>Command palette: jump to anything (Ctrl + K on Windows)</td></tr><tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Space</kbd></td><td>In Schedules: move between schedules; Space pauses or resumes one (N makes a new one)</td></tr><tr><td><kbd>Esc</kbd></td><td>Close the popup, chat or menu (in full screen, the browser leaves full screen first)</td></tr><tr><td><kbd>⌘</kbd> <kbd>Enter</kbd></td><td>Send the job or reply (Ctrl + Enter on Windows)</td></tr>';
+function showKeys() { const d = $('#keys'); d.open ? d.close() : d.showModal(); }
+$('#keysClose').onclick = () => $('#keys').close();
+const typing = el => !!el?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable=true]');
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.repeat || typing(e.target)) return;
+  if ((e.key === '?' || (e.key === '/' && e.shiftKey)) && !document.querySelector('dialog[open]:not(#keys)')) { e.preventDefault(); return showKeys(); }
+  if (document.querySelector('dialog[open]') || panelOpen === 'arcade') return;
+  const act = ACT[e.key.length === 1 ? e.key.toLowerCase() : ''];
+  if (act) { e.preventDefault(); closeMenu(); act(); }
+});
+
+// ---- command palette (⌘K / Ctrl+K): fuzzy jump to any nimion, job (current and past), popup, schedule or action ----
+let palAll = [], palShown = [], palSel = 0, palPast = [], palTm = 0, palSeq = 0;
+function palItems() {
+  const items = [], add = (group, icon, label, hint, run, extra = '') => items.push({ group, icon, label, hint, run, extra });
+  add('Action', '📨', 'New job', 'N', () => openPanel('compose'));
+  add('Action', '🌗', isDark() ? 'Light mode' : 'Dark mode', 'D', () => toggleTheme());
+  add('Action', '⛶', isFull ? 'Leave full screen' : 'Full screen', 'F', () => toggleFull());
+  add('Action', '⌨️', 'Keyboard shortcuts', '?', () => showKeys());
+  for (const [m, l] of [['auto', 'follow the clock'], ['day', 'always day'], ['night', 'always night']]) add('Action', m === 'night' ? '🌙' : m === 'day' ? '☀️' : '🕰️', `Time of day: ${l}`, skyMode === m ? 'on' : '', () => setSky(m));
+  for (const [id, [icon, label]] of Object.entries(PANELS)) if (id !== 'compose') add('Popup', icon, label, '', () => (id === 'log' ? toggleLog(true) : openPanel(id)));
+  for (const id of Object.keys(Games)) add('Game', '🕹️', `Play ${Games[id].title}`, (Games[id].modes || ['1p']).map(m => MODE_NAME[m] || m).join(' · '), () => { openPanel('arcade'); pickGame(id); });
+  for (const c of S?.crew || []) add('Nimion', '', c.name, (c.title || '').split('·').pop().trim(), () => onNimionClick(c.name), `style="--tint:${tint(c.name)}"`);
+  for (const t of [...(S?.tasks || [])].reverse()) add('Job', t.parent ? '↳' : '📄', `#${t.id} ${t.title}`, `${t.nimion} · ${ST[t.status] || t.status}`, () => openTask(t.id));
+  for (const sc of S?.schedules || []) add('Schedule', '⏰', sc.name, sc.paused ? 'paused' : 'scheduled', () => openPanel('schedules'));
+  return items;
+}
+function palDraw() {
+  const q = $('#palQ').value.trim(), seen = new Set((S?.tasks || []).map(t => t.id));
+  const past = palPast.filter(j => !seen.has(j.id)).map(j => ({ group: 'Past job', icon: '🗂️', label: `#${j.id} ${j.title}`, hint: `${j.nimion} · cleared`, run: () => openTask(j.id), extra: '' }));
+  const pool = palAll.concat(past);
+  palShown = q ? pool.map(it => ({ it, s: Math.max(HQW.fuzzy(q, it.label), HQW.fuzzy(q, it.label + ' ' + it.hint + ' ' + it.group) - 4) })).filter(x => x.s >= 0).sort((a, b) => b.s - a.s).map(x => x.it).slice(0, 40)
+    : pool.slice(0, 40);
+  palSel = Math.min(palSel, Math.max(0, palShown.length - 1));
+  $('#palList').innerHTML = palShown.map((it, i) => `<li role="option" id="pal-${i}" data-i="${i}" aria-selected="${i === palSel}" ${it.extra}>` +
+    `<span class="pi">${it.group === 'Nimion' ? '<i class="dot"></i>' : esc(it.icon)}</span><span class="pl">${esc(it.label)}</span><small>${esc(it.hint)}</small><small>${esc(it.group)}</small></li>`).join('')
+    || '<li class="pal-empty" aria-disabled="true">Nothing matches.</li>';
+  $('#palQ').setAttribute('aria-activedescendant', palShown.length ? `pal-${palSel}` : '');
+  $('#palList').querySelector('[aria-selected=true]')?.scrollIntoView({ block: 'nearest' });
+}
+function openPalette() {
+  const d = $('#pal');
+  if (d.open) return d.close();
+  document.querySelectorAll('dialog[open]').forEach(x => x.close());
+  closeMenu(); palAll = palItems(); palPast = []; palSel = 0; $('#palQ').value = '';
+  d.showModal(); palDraw(); $('#palQ').focus();
+}
+function palRun(i) { const it = palShown[i]; if (!it) return; $('#pal').close(); it.run(); }
+$('#palQ').addEventListener('input', () => {
+  palSel = 0; palDraw();
+  clearTimeout(palTm); const q = $('#palQ').value.trim(), seq = ++palSeq;
+  if (q.length < 2) { palPast = []; return; }
+  palTm = setTimeout(() => fetch(`/api/history?q=${encodeURIComponent(q)}&limit=20`).then(r => r.json()).then(list => { if (seq === palSeq) { palPast = list; palDraw(); } }).catch(() => {}), 200);
+});
+$('#palQ').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); palSel = (palSel + (e.key === 'ArrowDown' ? 1 : -1) + palShown.length) % Math.max(1, palShown.length); palDraw(); }
+  else if (e.key === 'Enter') { e.preventDefault(); palRun(palSel); }
+});
+$('#palList').addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) palRun(Number(li.dataset.i)); });
+document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); } });
+
+// Time of day in the room: follow the clock (default), or always day / always night. Saved in this browser.
+let skyMode = 'auto';
+try { skyMode = ['auto', 'day', 'night'].includes(localStorage.getItem('hq-sky')) ? localStorage.getItem('hq-sky') : 'auto'; } catch {}
+function setSky(m) {
+  skyMode = m; try { localStorage.setItem('hq-sky', m); } catch {}
+  Lab.sky(m);
+  toast(m === 'auto' ? 'The room follows your clock.' : `The room stays ${m === 'day' ? 'in daylight' : 'at night'}.`);
+}
+
+// ---- live log: every nimion's activity as it happens ----
+const KIND = { you: '🧑', say: '💬', tool: '🔧', sys: '⚙️', err: '⛔' };
+let logES = null;
+function feedLine(l) {
+  const feed = $('#feed'), atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 40;
+  const row = document.createElement('div');
+  row.className = `fl k-${l.k}`;
+  row.dataset.open = l.task;
+  row.title = l.t;
+  if (S) row.style.setProperty('--tint', tint(l.nimion));
+  row.innerHTML = `<time>${new Date(l.at).toLocaleTimeString([], { hour12: false })}</time><b>${esc(l.nimion)}</b><span class="tid">#${l.task}</span>` +
+    `<span>${KIND[l.k] || '·'}</span><span class="txt">${esc(l.t.replace(/\s+/g, ' '))}</span>`;
+  feed.append(row);
+  while (feed.childElementCount > 1000) feed.firstElementChild.remove();
+  if (atBottom) feed.scrollTop = feed.scrollHeight;
+}
+function startFeed() {
+  if (logES) return;
+  logES = new EventSource('/api/logs');
+  logES.onopen = () => { $('#feed').textContent = ''; $('#lpDot').classList.remove('off'); }; // the server resends recent lines on every connect
+  logES.onmessage = e => { const l = JSON.parse(e.data); feedLine(l); Lab.feed(l); };
+  logES.onerror = () => $('#lpDot').classList.add('off');
+}
+let logFlew = false;
+function toggleLog(open = $('#logpanel').hidden, fromRoom = false) {
+  $('#logpanel').hidden = !open;
+  $('#logBtn').setAttribute('aria-expanded', String(open));
+  if (open) startFeed();
+  if (open && fromRoom) { logFlew = true; Lab.focus('log'); }
+  if (!open && logFlew) { logFlew = false; Lab.release(); }
+  if (open) $('#feed').scrollTop = $('#feed').scrollHeight;
+}
+$('#logBtn').onclick = () => toggleLog();
+
+// ---- setup: is Claude Code installed and signed in with a Claude plan? ----
+let suInfo = {}, suAuto = false;
+function renderSetup() {
+  const st = { ...S.setup, ...suInfo }, checking = /^Checking/.test(st.problem || ''), signedIn = st.version && !st.problem;
+  $('#setupBtn').classList.toggle('bad', !!st.problem && !checking);
+  $('#setupBtn').innerHTML = st.problem && !checking ? '⚠️<span class="lbl"> Setup needed</span>' : '🚀<span class="lbl"> Setup</span>';
+  const step = (ok, title, small) => `<li><span>${ok === null ? '⏳' : ok ? '✅' : '❌'}</span><b>${title}</b><small>${small}</small></li>`;
+  $('#suSteps').innerHTML =
+    step(checking ? null : !!st.version, 'Claude Code is installed', st.version ? `Version ${esc(st.version)}.`
+      : 'Install it: <code>npm install -g @anthropic-ai/claude-code</code>, or see <a href="https://docs.claude.com/en/docs/claude-code/setup" target="_blank" rel="noopener">the setup guide</a>. Then press Check again.') +
+    step(checking ? null : !!signedIn, 'Signed in with your Claude plan', signedIn ? `Plan: ${esc(st.plan || st.authMethod || 'Claude')}. Runs count against this plan's limits, and Nimion HQ stops before you reach them.`
+      : `${md.inline(st.problem || '')} Sign in with <code>claude auth login</code> and pick your Claude.ai account (Pro, Max, Team or Enterprise). Nimions don't start until this is fixed.`) +
+    step(true, 'The crew works in this folder', `<code>${esc(S.workdir)}</code> ${S.git ? '· a git branch and worktree per task.' : '· not a git repo, so all nimions share it. A git repo gets a branch per task.'}
+      To use another project, restart with <code>npm start -- ~/path/to/project</code>.`) +
+    step(true, 'Try it', 'Close this and post a job in the red NEW JOB box by the boss (or ＋ New job). Hire and edit nimions in the NR office, link docs on the bookshelf, and pin standing rules on the guidance board. ☰ Room lists everything.');
+  let first = false;
+  try { first = !localStorage.getItem('hq-setup-done'); } catch {}
+  if (!suAuto && !checking && (first || st.problem) && !$('#setup').open) { suAuto = true; $('#setup').showModal(); }
+}
+$('#setupBtn').onclick = () => $('#setup').showModal();
+$('#suDone').onclick = () => { try { localStorage.setItem('hq-setup-done', '1'); } catch {} $('#setup').close(); };
+$('#suCheck').onclick = async e => {
+  e.target.disabled = true;
+  try { suInfo = await post('/api/setup'); renderSetup(); } catch (err) { toast(err.message); }
+  e.target.disabled = false;
+};
+$('#suMcp').onclick = async e => {
+  e.target.disabled = true; e.target.textContent = 'Connecting to each server… (up to a minute)';
+  try {
+    const r = await post('/api/setup', { mcp: true });
+    $('#suMcpList').innerHTML = r.mcp.length ? r.mcp.map(m => `<li class="${m.ok ? '' : 'off'}" title="${esc(m.status)}">${m.ok ? '🟢' : '⚪'} ${esc(m.name)}</li>`).join('')
+      : '<li class="off">No MCP servers yet. The built-in tools (files, shell, web) still work.</li>';
+  } catch (err) { toast(err.message); }
+  e.target.disabled = false; e.target.textContent = 'Check my MCP servers again';
+};
+$('#lpClose').onclick = () => toggleLog(false);
+
+</script>
+</body>
+</html>

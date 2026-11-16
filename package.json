@@ -1,0 +1,49 @@
+{
+  "name": "nimion-hq",
+  "version": "1.0.0",
+  "description": "A crew of Claude Code agents with a task board, running on your Claude subscription.",
+  "type": "module",
+  "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Aishwary Dhare (https://github.com/aishwarydhare)",
+  "homepage": "https://github.com/aishwarydhare/Nimion-HQ#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aishwarydhare/Nimion-HQ.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aishwarydhare/Nimion-HQ/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "setup": "./setup.sh",
+    "start": "node server.mjs",
+    "test": "node test.mjs"
+  },
+  "files": [
+    "server.mjs",
+    "approve-mcp.mjs",
+    "index.html",
+    "games.js",
+    "world.js",
+    "md.js",
+    "lab3d.js",
+    "lab3d-demo.html",
+    "vendor/",
+    "crew.example.json",
+    "test.mjs",
+    "setup.sh",
+    "README.md",
+    "LICENSE.md",
+    "LICENSES/",
+    "NOTICE",
+    "REUSE.toml",
+    "CONTRIBUTING.md",
+    "RESEARCH.md",
+    "research/",
+    "docs/",
+    ".gitignore"
+  ]
+}

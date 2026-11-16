@@ -1,0 +1,19 @@
+# runtime data: your tasks, uploads and the crew's working folders
+data.json
+data.json.tmp
+*.tmp
+attachments/
+workspace/
+worktrees/
+node_modules/
+.DS_Store
+data.*.json
+*.tgz
+.dev/
+
+# your own crew and local tool state: never shared (a new clone starts from crew.example.json)
+crew.json
+.claude/
+
+# local-only extras: never shared
+*.local.js

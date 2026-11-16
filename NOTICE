@@ -1,0 +1,70 @@
+Nimion HQ
+Copyright (c) 2026 Aishwary Dhare
+
+Required Notice: Copyright (c) 2026 Aishwary Dhare (https://github.com/aishwarydhare/Nimion-HQ)
+
+Nimion HQ is licensed under the PolyForm Noncommercial License 1.0.0.
+The terms are in LICENSE.md and at
+https://polyformproject.org/licenses/noncommercial/1.0.0
+
+If you pass on any part of Nimion HQ, with or without your own changes, you
+must pass on those terms (or their URL) and the "Required Notice" line above.
+
+Any commercial use needs a separate licence from the copyright holder. Ask by
+opening an issue at https://github.com/aishwarydhare/Nimion-HQ/issues or
+through https://github.com/aishwarydhare.
+
+Copyright and licence information for every file in this repository is kept
+in REUSE.toml (REUSE Specification 3.3, https://reuse.software), so that no
+source file needs a header. The licence texts are in LICENSES/.
+
+
+THIRD-PARTY SOFTWARE BUNDLED WITH NIMION HQ
+-------------------------------------------
+
+three.js 0.170.0
+  Files: vendor/three/three.module.min.js and
+         vendor/three/addons/controls/OrbitControls.js
+         (unmodified, from the three.js npm package)
+  Copyright (c) 2010-2024 three.js authors
+  MIT License. The full notice is in vendor/three/LICENSE.
+  https://github.com/mrdoob/three.js
+
+These files stay under the MIT License. The PolyForm Noncommercial terms do
+not apply to them.
+
+
+ACKNOWLEDGEMENTS
+----------------
+
+Nimion HQ was designed after studying two open-source projects. No source
+file, art or other asset from either project is included in this repository.
+Several of their ideas were written again from scratch here, and the research
+notes in RESEARCH.md and research/ quote short excerpts from their code and
+documentation for commentary. Those excerpts belong to their authors and are
+used under the MIT License (LICENSES/MIT.txt):
+
+Paperclip
+  Copyright (c) 2025 Paperclip AI
+  MIT License
+  https://github.com/paperclipai/paperclip
+
+Munder Difflin
+  Copyright (c) 2026 Chaitanya Giri
+  MIT License (source code)
+  https://github.com/HarnessMD/munder-difflin
+  Its bundled pixel-art assets are licensed separately. None are used here.
+
+
+TRADEMARKS AND AFFILIATION
+--------------------------
+
+Nimion HQ is an independent, unofficial project. It is not affiliated with,
+endorsed by or sponsored by Anthropic, Paperclip AI, the authors of Munder
+Difflin or the three.js authors.
+
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. The characters
+in Nimion HQ are original and are drawn in code from simple shapes. All other
+names belong to their owners and are used only to identify them.
+
+The licence above grants no rights in any name, logo or trademark.
