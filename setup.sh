@@ -50,8 +50,13 @@ if [ $SERVICE = 1 ]; then
 </dict>
 </plist>
 PLIST
+  # A service that is already running takes a moment to stop: wait for it to go, then try the start a few times.
   launchctl bootout "gui/$(id -u)/local.nimion-hq" 2>/dev/null
-  launchctl bootstrap "gui/$(id -u)" "$plist" && ok "Runs at login (logs: ~/Library/Logs/nimion-hq.log)"
+  for _ in 1 2 3 4 5 6 7 8 9 10; do launchctl print "gui/$(id -u)/local.nimion-hq" >/dev/null 2>&1 || break; sleep .5; done
+  started=0
+  for _ in 1 2 3 4 5; do launchctl bootstrap "gui/$(id -u)" "$plist" 2>/dev/null && { started=1; break; }; sleep 1; done
+  [ $started = 1 ] || { bad "The service did not start. Try:  launchctl bootstrap gui/$(id -u) $plist"; exit 1; }
+  ok "Runs at login (logs: ~/Library/Logs/nimion-hq.log)"
   sleep 2; open "http://localhost:${PORT:-4321}" 2>/dev/null
 else
   echo; echo "Start it:   npm start${PROJECT:+ -- \"$PROJECT\"}"; echo "Then open:  http://localhost:4321"
